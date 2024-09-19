@@ -1,0 +1,27 @@
+_target_: matcha.data.text_mel_datamodule.TextMelDataModule
+name: expressive-multi
+train_filelist_path: /home/paige/Documents/TTS/Matcha-TTS/data/parler-curious/train.txt
+valid_filelist_path: /home/paige/Documents/TTS/Matcha-TTS/data/parler-curious/validate.txt
+batch_size: 2
+num_workers: 20
+pin_memory: True
+cleaners: [english_cleaners2]
+add_blank: True
+n_spks: 109
+n_fft: 1024
+n_feats: 80
+sample_rate: 44100
+hop_length: 256
+win_length: 1024
+f_min: 0
+f_max: 8000
+data_statistics:
+  mel_mean: -6.657476425170898
+  mel_std: 2.5219244956970215 
+seed: ${seed}
+load_durations: false
+
+
+#mutli emotions
+#  mel_mean: -6.6337480545043945
+#  mel_std: 2.111703872680664

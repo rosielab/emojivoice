@@ -1,0 +1,66 @@
+_target_: matcha.data.text_mel_datamodule.TextMelDataModule
+name: expressive
+train_filelist_path: /home/paige/Documents/TTS/Matcha-TTS/data/happy/train.txt
+valid_filelist_path: /home/paige/Documents/TTS/Matcha-TTS/data/happy/validate.txt
+batch_size: 2
+num_workers: 20
+pin_memory: True
+cleaners: [english_cleaners2]
+add_blank: True
+n_spks: 1
+n_fft: 1024
+n_feats: 80
+sample_rate: 44100
+hop_length: 256
+win_length: 1024
+f_min: 0
+f_max: 8000
+data_statistics:
+  mel_mean: -6.027872562408447
+  mel_std: 2.2679078578948975  
+seed: ${seed}
+load_durations: false
+
+## Happy
+#  mel_mean: -6.027872562408447
+#  mel_std: 2.2679078578948975
+
+## Frustrated
+#  mel_mean: -6.647445201873779
+#  mel_std: 2.022753953933716
+
+## Sad
+#  mel_mean: -7.186276435852051
+#  mel_std: 1.9838203191757202
+
+## Comforting
+#  mel_mean: -6.641870021820068
+#  mel_std: 1.9778696298599243
+
+## Angelica Frustrated
+#  mel_mean: -6.72210168838501
+#  mel_std: 2.038729429244995
+
+## Hand over mouth
+#  mel_mean: -6.847457408905029
+#  mel_std: 2.1480655670166016
+
+## party
+#  mel_mean: -6.515801906585693
+#  mel_std: 1.966355562210083
+
+## rofl
+#  mel_mean: -6.095519065856934
+#  mel_std: 2.126851797103882
+
+## heart eyes
+#  mel_mean: -6.095519065856934
+#  mel_std: 2.126851797103882
+
+## star eyes
+#  mel_mean: -6.6360063552856445
+#  mel_std: 2.030756950378418
+
+## wink
+#  mel_mean: -7.444238662719727
+#  mel_std: 2.052685022354126
