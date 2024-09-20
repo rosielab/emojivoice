@@ -21,18 +21,23 @@ from matcha.models.matcha_tts import MatchaTTS
 from matcha.text import sequence_to_text, text_to_sequence
 from matcha.utils.utils import get_user_data_dir, intersperse, assert_model_downloaded
 
-
-from WhisperLive.whisperlive.client import TranscriptionClient
-
 import emoji
 
-import re
 import os
-import time
+
+import numpy as np
+import wavio
+from pynput import keyboard
+
+import pandas as pd
+import whisper
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 ############################### ASR PARAMETERS #########################################################################
 SRT_PATH = "output.srt"
 #WHISPER_PORT ='9090'
+ASR_MODEL = "tiny.en"
 
 ############################### LLM PARAMETERS #########################################################################
 LLM_MODEL = "llama3"
@@ -41,16 +46,17 @@ PROMPT = """
 
             Interaction Guidelines:
             - Answer questions to the best of your knowledge
-            - Provide expressive responses with the following emotions : 😎🤔😍🤣🙂😮🙄😅🥲😭😡😁.
+            - Provide expressive responses with the following emotions : 😎🤔😍🤣🙂😮🙄😅😭😡😁.
             - Respond to casual remarks with friendly and engaging comments.
             - Keep your responses concise and to the point, ideally one sentence.
             - Respond to simple greetings with equally simple responses
+            - Answers should be limited to one sentence.
 
             Emotions and Emojis:
-            - Within each sentence add one of these emojis 😎🤔😍🤣🙂😮🙄😅🥲😭😡😁 that reflects the emotion of the phrase (e.g. That is so funny 😅. I love talking to you 😍.).
-            - Add one emoji per sentence.
-            - If the phrase is neutral do not include an emoji, all other phrases must be chosen to reflect one of these emojis 😎🤔😍🤣🙂😮🙄😅🥲😭😡😁.
-            - Do not use any emojis other than 😎🤔😍🤣🙂😮🙄😅🥲😭😡😁
+            - At the end of each response add one of these emojis 😎🤔😍🤣🙂😮🙄😅😭😡😁 that reflects the emotion of the the entire response (e.g. That is so funny. I love talking to you 😍.).
+            - Add only one emoji per response.
+            - If the phrase is neutral do not include an emoji, all other phrases must be chosen to reflect one of these emojis 😎🤔😍🤣🙂😮🙄😅😭😡😁.
+            - Do not use any emojis other than 😎🤔😍🤣🙂😮🙄😅😭😡😁
 
             Error Handling:
             - Avoid giving medical, legal, political, or financial advice. Recommend the user consult a professional instead. You can still talk about historic figures.
@@ -205,6 +211,46 @@ def assert_required_models_available():
 def contains_only_non_emoji(string):
     return all(not emoji.is_emoji(char) for char in string) and len(string.strip()) > 0
 
+class Recorder:
+    def __init__(self):
+        self.frames = []
+        self.recording = False
+
+    def start_recording(self, filename, fs=44100, channels=1):
+        self.frames = []
+        self.recording = True
+        stream = sd.InputStream(callback=self.callback, channels=channels, samplerate=fs)
+        stream.start()
+        print("Recording... Press any key but Enter to stop recording.")
+
+        with keyboard.Listener(on_press=self.on_press) as listener:
+            listener.join()
+
+        stream.stop()
+        stream.close()
+        print("Recording stopped.")
+
+        # Check if frames are collected
+        if len(self.frames) > 0:
+            # Convert frames to a NumPy array
+            audio_data = np.concatenate(self.frames, axis=0)
+            # Normalize audio data to fit within int16 range
+            audio_data = np.clip(audio_data * 32767, -32768, 32767)
+            audio_data = audio_data.astype(np.int16)  # Convert to int16
+
+            wavio.write(filename, audio_data, fs, sampwidth=2)
+        else:
+            print("No audio data recorded.")
+
+    def callback(self, indata, frames, time, status):
+        if self.recording:
+            self.frames.append(indata.copy())
+
+    def on_press(self, key):
+        print("Key pressed, stopping recording.")
+        self.recording = False
+        return False
+
 
 llm = get_llm(LLM_TEMPERATURE)
 prompt = get_chat_prompt_template(PROMPT)
@@ -220,97 +266,75 @@ chain_with_message_history = RunnableWithMessageHistory(
 )
 
 if __name__ == "__main__":
-    device = torch.device("cpu")
+
+    asr_model = whisper.load_model(ASR_MODEL)
+
+    tts_device = torch.device("cpu")
     paths = assert_required_models_available()
 
     save_dir = get_user_data_dir()
  
-    model = load_matcha(paths["matcha"], device)
-    vocoder, denoiser = load_vocoder(VOCODER_NAME, paths["vocoder"], device)
+    tts_model = load_matcha(paths["matcha"], tts_device)
+    vocoder, denoiser = load_vocoder(VOCODER_NAME, paths["vocoder"], tts_device)
 
-    #server_command = ['python', 'WhisperLive/run_server.py', '--port', WHISPER_PORT, '--backend', 'faster_whisper']
-    #server_process = subprocess.Popen(server_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    input(f"Press Enter when you're ready to record 🎙️ ")
 
-    #while True:
-    #    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-    #        result = sock.connect_ex(('localhost', int(WHISPER_PORT)))
-    #        if result == 0:
-    #            print("server ready")
-    #            break
+    recorder = Recorder()
+    recorder.start_recording("output.wav")
 
-    client = TranscriptionClient(
-      "localhost",
-      9090,
-      lang="en",
-      translate=False,
-      model="small",
-      use_vad=False,
-    )
+    result = asr_model.transcribe("output.wav")
+    result = result['text']
 
-    time.sleep(3)
-
-    client()
-
+    print(result)
+    
     while True:
-        if not is_file_empty(SRT_PATH):
-            with open(SRT_PATH, 'r') as f:
-                question = f.read()
-            if "end session" in question.lower():
-                break
+        if result != '':
+            if "end session" in result.lower():
+                exit(0)
+            print("LLM reading")
             response = chain_with_message_history.invoke(
-                {"content": question },
+                {"content": result },
                 {"configurable": {"session_id": "unused"}}
             ).content
             print(response)
-            response_list = re.split('[?.!]', response)
-
-            # check if a string contains only emojis
-            for i, response_phrase in enumerate(response_list):
-                if response_phrase == '':
-                    del response_list[i]
+            # Get the last emoji (there should only be one but the LLM does not always behave)
+            emoji_list = []
+            for char in response:
+                if emoji.is_emoji(char):
+                    emoji_list.append(char)
+            # incase the last emoji is not in the emoji list
+            print(emoji_list)
+            spk = torch.tensor([7], device=tts_device, dtype=torch.long)
+            for emote in reversed(emoji_list):
+                print("hi")
+                if emote in emoji_mapping:
+                    print(emote)
+                    spk = torch.tensor([emoji_mapping[emote]], device=tts_device, dtype=torch.long)
                     break
-                response_phrase = response_phrase.strip()
-                if emoji.purely_emoji(response_phrase):
-                    if contains_only_non_emoji(response_list[i-1]):
-                        response_list[i-1] += f" {response_phrase}"
-                    del response_list[i]
+            response = emoji.replace_emoji(response, '')
+            #matcha cannot handle brackets
+            response = response.replace(')', '')
+            response = response.replace('(', '')
+            if response != '':
+                play_only_synthesis(tts_device, tts_model, vocoder, denoiser, response, spk)
+            # sometimes it does just an emoji... just say nice
+            else:
+                play_only_synthesis(tts_device, tts_model, vocoder, denoiser, 'nice', spk)
 
-            for response_phrase in response_list:
-                for emote in emoji_mapping:
-                    if emote in response_phrase:
-                        spk = torch.tensor([emoji_mapping[emote]], device=device, dtype=torch.long)
-                        break
-                    else:
-                        spk = torch.tensor([1], device=device, dtype=torch.long)
-                response_phrase = emoji.replace_emoji(response_phrase, '')
-                #matcha cannot handle brackets
-                response_phrase = response_phrase.replace(')', '')
-                response_phrase = response_phrase.replace('(', '')
-                play_only_synthesis(device, model, vocoder, denoiser, response_phrase, spk)
-            clear_file(SRT_PATH)
-            client = TranscriptionClient(
-              "localhost",
-              9090,
-              lang="en",
-              translate=False,
-              model="small",
-              use_vad=False,
-            )
+            input(f"Press Enter when you're ready to record 🎙️ ")
+            recorder = Recorder()
+            recorder.start_recording("output.wav")
 
-            time.sleep(3)
+            result = asr_model.transcribe("output.wav")
+            result = result['text']
 
-            client()
+            print(result)
         else:
             print("I didn't hear anything, try recording again...")
-            client = TranscriptionClient(
-              "localhost",
-              9090,
-              lang="en",
-              translate=False,
-              model="small",
-              use_vad=False,
-            )
+            input(f"Press Enter when you're ready to record 🎙️ ")
 
-            time.sleep(3)
+            recorder = Recorder()
+            recorder.start_recording("output.wav")
 
-            client()
+            result = asr_model.transcribe("output.wav")
+            result = result['text']
