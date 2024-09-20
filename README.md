@@ -10,7 +10,7 @@ ASR -> LLM -> TTS
 
 ### ASR
 Modified version of:
-* [WhisperLive](https://github.com/collabora/WhisperLive)
+* [Whisper](https://github.com/openai/whisper?tab=readme-ov-file)
 
 ### LLM
 Ollama and langchain chatbot implementation of:
@@ -39,14 +39,7 @@ Create conda envrionemnt or virtualenv and install the requirements
 pip install requirements.txt
 ```
 
-Start WhisperLive server:
-
-```
-cd WhisperLive
-python run_server.py --port 9090 --backend faster_whisper
-```
-
-In another terminal run Speech-to-Speech system:
+Speech-to-Speech system:
 
 ```
 python feel_me.py
@@ -60,6 +53,7 @@ It is possible to customize the pipeline. You can perform the following modifica
 
 * Modify the LLM prompt and emojis
 * Change to a different LLM available from Ollama
+* Change the Whisper model
 * Change the temperature of the TTS and LLM
 * Use a different Matcha-TTS checkpoint
 * Modify the speaking rate
