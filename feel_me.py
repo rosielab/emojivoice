@@ -29,11 +29,10 @@ import numpy as np
 import wavio
 from pynput import keyboard
 
-import pandas as pd
 import whisper
 
+VOICE = 'emoji'
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
 ############################### ASR PARAMETERS #########################################################################
 SRT_PATH = "output.srt"
 #WHISPER_PORT ='9090'
@@ -46,17 +45,18 @@ PROMPT = """
 
             Interaction Guidelines:
             - Answer questions to the best of your knowledge
-            - Provide expressive responses with the following emotions : 😎🤔😍🤣🙂😮🙄😅😭😡😁.
+            - Provide expressive responses with only the following emotions : 😎🤔😍🤣🙂😮🙄😅😭😡😁.
             - Respond to casual remarks with friendly and engaging comments.
             - Keep your responses concise and to the point, ideally one sentence.
             - Respond to simple greetings with equally simple responses
             - Answers should be limited to one sentence.
 
             Emotions and Emojis:
-            - At the end of each response add one of these emojis 😎🤔😍🤣🙂😮🙄😅😭😡😁 that reflects the emotion of the the entire response (e.g. That is so funny. I love talking to you 😍.).
-            - Add only one emoji per response.
-            - If the phrase is neutral do not include an emoji, all other phrases must be chosen to reflect one of these emojis 😎🤔😍🤣🙂😮🙄😅😭😡😁.
-            - Do not use any emojis other than 😎🤔😍🤣🙂😮🙄😅😭😡😁
+            - At the end of each response add one of these emojis: 😎🤔😍🤣🙂😮🙄😅😭😡😁 that reflects the emotion of the the entire response.
+            - Add only one emoji per response, at the end of the response.
+            - If the phrase is neutral do not include an emoji
+            - all other phrases must be chosen to reflect one of these emojis: 😎🤔😍🤣🙂😮🙄😅😭😡😁.
+            - Do not use any emojis other than these: 😎🤔😍🤣🙂😮🙄😅😭😡😁
 
             Error Handling:
             - Avoid giving medical, legal, political, or financial advice. Recommend the user consult a professional instead. You can still talk about historic figures.
@@ -65,16 +65,43 @@ PROMPT = """
             - do not add robot sounds
             - do not use symbols such as () * % & - _
             - do not use new lines
+            - do not add emojis other than: 😎🤔😍🤣🙂😮🙄😅😭😡😁
+
+            Follow this example format:
+
+            Human: You know, you are a really cool friend.
+            LLM response: Thanks, I am pretty cool, aren't I 😎.
+            Human: Do you what to know what makes you such a good friend?
+            LLM response: Hmmm, I never really thought about it 🤔?
+            Human: It is because you are always here to listen and make me smile.
+            LLM response: Wow I am so flattered, you also make me smile 😍.
+            Human: I have a joke, have you heard of the blind man who picked up the hammer and saw?
+            LLM response: That is a funny one, nice play on words 🤣. 
+            Human: I didn't even prepare that joke ahead of time, isn't that surprising?
+            LLM response: Wow, what a great job you did thinking on the spot, you should do improv 😮. 
+            Human: I wanted to work as a comedian but I got rejected again.
+            LLM response: That sucks, those critics don't know anything, just ignore them 🙄.
+            Human: As long as I don't trip coming on stage again I think I can do it.
+            LLM response: Oh no, well let's hope that doesn't happen 😅.
+            Human: Sometimes the hecklers are so mean, it makes me so mad.
+            LLM response: Ugh, I can totally understand why that would be frustrating and angering! Dealing with tough crowds can be really challenging, don't let them get under your skin 😡.
+            Human: Thank you, you are so encouraging, I am so excited to get started!
+            LLM response: That's the spirit! I'm thrilled to see you're feeling motivated and ready to take on new challenges 😁!
+            Human: This has been a very pleasant conversation.
+            LLM response: I completely agree! It's been an absolute delight chatting with you, sharing laughs, and making memories together 🙂. 
+            Human: I have to go now, but I am so sad to be leaving.
+            LLM response: I am sad to see you go as well, I hope to see you again soon 😭.
         """
 
 # Setting a higher temperature will provide more creative, but possibly less accurate answers
 # Temperature ranges between 0 and 1
 LLM_TEMPERATURE = 0.6
-# Location to store history to create chatbot memory
-CHAT_HISTORY_LOCATION = "memory.json"
 
 ############################ TTS PARAMETERS ############################################################################
-TTS_MODEL_PATH = "./Matcha-TTS/checkpoint_epoch=2099.ckpt"
+if VOICE == 'base' :
+    TTS_MODEL_PATH = "/home/paige/Documents/do_you_feel_me/Matcha-TTS/matcha_vctk.ckpt"
+else:
+    TTS_MODEL_PATH = "./Matcha-TTS/checkpoint_epoch=2099.ckpt"
 # hifigan_univ_v1 is suggested, unless the custom model is trained on LJ Speech
 VOCODER_NAME= "hifigan_univ_v1"
 STEPS = 10
@@ -102,14 +129,6 @@ emoji_mapping = {
 
 ########################################################################################################################
 
-def is_file_empty(file_path):
-    return os.stat(file_path).st_size == 0
-
-# Function to clear the file contents
-def clear_file(file_path):
-    with open(file_path, 'w') as f:
-        f.write("")
-
 def get_llm(temperature):
     """
         returns model instance
@@ -127,17 +146,6 @@ def get_chat_prompt_template(prompt):
             MessagesPlaceholder(variable_name="messages"),
             HumanMessagePromptTemplate.from_template("{content}"),
         ],
-    )
-
-def get_memory(file_path):
-    """
-        create and return buffer memory to retain the conversation info
-    """
-    return ConversationBufferMemory(
-        memory_key="messages",
-        chat_memory=FileChatMessageHistory(file_path=file_path),
-        return_messages=True,
-        input_key="content",
     )
 
 def process_text(i: int, text: str, device: torch.device, play):
@@ -208,9 +216,6 @@ def assert_required_models_available():
     assert_model_downloaded(vocoder_path, VOCODER_URLS[VOCODER_NAME])
     return {"matcha": model_path, "vocoder": vocoder_path}
 
-def contains_only_non_emoji(string):
-    return all(not emoji.is_emoji(char) for char in string) and len(string.strip()) > 0
-
 class Recorder:
     def __init__(self):
         self.frames = []
@@ -247,7 +252,6 @@ class Recorder:
             self.frames.append(indata.copy())
 
     def on_press(self, key):
-        print("Key pressed, stopping recording.")
         self.recording = False
         return False
 
@@ -285,7 +289,7 @@ if __name__ == "__main__":
     result = asr_model.transcribe("output.wav")
     result = result['text']
 
-    print(result)
+    print(f'speaker said: {result}')
     
     while True:
         if result != '':
@@ -303,14 +307,16 @@ if __name__ == "__main__":
                 if emoji.is_emoji(char):
                     emoji_list.append(char)
             # incase the last emoji is not in the emoji list
-            print(emoji_list)
-            spk = torch.tensor([7], device=tts_device, dtype=torch.long)
-            for emote in reversed(emoji_list):
-                print("hi")
-                if emote in emoji_mapping:
-                    print(emote)
-                    spk = torch.tensor([emoji_mapping[emote]], device=tts_device, dtype=torch.long)
-                    break
+            if VOICE == 'base':
+                spk = torch.tensor([1], device=tts_device, dtype=torch.long)
+            if VOICE == 'default':
+                spk = torch.tensor([7], device=tts_device, dtype=torch.long)
+            if VOICE == 'emoji':
+                spk = torch.tensor([7], device=tts_device, dtype=torch.long)
+                for emote in emoji_list:
+                    if emote in emoji_mapping:
+                        spk = torch.tensor([emoji_mapping[emote]], device=tts_device, dtype=torch.long)
+                        break
             response = emoji.replace_emoji(response, '')
             #matcha cannot handle brackets
             response = response.replace(')', '')
@@ -328,7 +334,7 @@ if __name__ == "__main__":
             result = asr_model.transcribe("output.wav")
             result = result['text']
 
-            print(result)
+            print(f'speaker said: {result}')
         else:
             print("I didn't hear anything, try recording again...")
             input(f"Press Enter when you're ready to record 🎙️ ")
@@ -338,3 +344,5 @@ if __name__ == "__main__":
 
             result = asr_model.transcribe("output.wav")
             result = result['text']
+
+            print(f'speaker said: {result}')
