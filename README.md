@@ -33,13 +33,22 @@ Clone this repo
 git clone git@github.com:rosielab/do_you_feel_me.git
 ```
 
-Create conda envrionemnt or virtualenv and install the requirements
+Create conda environment or virtualenv and install the requirements
+Note this repo has been tested with python 3.11.9
 
 ```
 pip install requirements.txt
 ```
 
 Speech-to-Speech system:
+
+You will need to pull the llama 3 model
+
+```
+curl -fsSL https://ollama.com/install.sh | sh
+ollama run llama3
+```
+Then run:
 
 ```
 python feel_me.py

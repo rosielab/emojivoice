@@ -1,6 +1,4 @@
 from langchain_ollama import ChatOllama
-from langchain_community.chat_message_histories import FileChatMessageHistory
-from langchain.memory import ConversationBufferMemory
 from langchain.prompts import (
     HumanMessagePromptTemplate,
     ChatPromptTemplate,
@@ -23,19 +21,18 @@ from matcha.utils.utils import get_user_data_dir, intersperse, assert_model_down
 
 import emoji
 
-import os
-
 import numpy as np
 import wavio
 from pynput import keyboard
 
 import whisper
 
+#######################################################################################################################
+
 VOICE = 'emoji'
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+TTS_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 ############################### ASR PARAMETERS #########################################################################
 SRT_PATH = "output.srt"
-#WHISPER_PORT ='9090'
 ASR_MODEL = "tiny.en"
 
 ############################### LLM PARAMETERS #########################################################################
@@ -44,11 +41,9 @@ PROMPT = """
             You are a robot designed to help humans
 
             Interaction Guidelines:
-            - Answer questions to the best of your knowledge
+            - You are a robot who is playing a build a story game with a human. You will go back and forth each saying one sentence to build a story.
             - Provide expressive responses with only the following emotions : 😎🤔😍🤣🙂😮🙄😅😭😡😁.
-            - Respond to casual remarks with friendly and engaging comments.
-            - Keep your responses concise and to the point, ideally one sentence.
-            - Respond to simple greetings with equally simple responses
+            - Use short and simple responses to build the story.
             - Answers should be limited to one sentence.
 
             Emotions and Emojis:
@@ -66,31 +61,6 @@ PROMPT = """
             - do not use symbols such as () * % & - _
             - do not use new lines
             - do not add emojis other than: 😎🤔😍🤣🙂😮🙄😅😭😡😁
-
-            Follow this example format:
-
-            Human: You know, you are a really cool friend.
-            LLM response: Thanks, I am pretty cool, aren't I 😎.
-            Human: Do you what to know what makes you such a good friend?
-            LLM response: Hmmm, I never really thought about it 🤔?
-            Human: It is because you are always here to listen and make me smile.
-            LLM response: Wow I am so flattered, you also make me smile 😍.
-            Human: I have a joke, have you heard of the blind man who picked up the hammer and saw?
-            LLM response: That is a funny one, nice play on words 🤣. 
-            Human: I didn't even prepare that joke ahead of time, isn't that surprising?
-            LLM response: Wow, what a great job you did thinking on the spot, you should do improv 😮. 
-            Human: I wanted to work as a comedian but I got rejected again.
-            LLM response: That sucks, those critics don't know anything, just ignore them 🙄.
-            Human: As long as I don't trip coming on stage again I think I can do it.
-            LLM response: Oh no, well let's hope that doesn't happen 😅.
-            Human: Sometimes the hecklers are so mean, it makes me so mad.
-            LLM response: Ugh, I can totally understand why that would be frustrating and angering! Dealing with tough crowds can be really challenging, don't let them get under your skin 😡.
-            Human: Thank you, you are so encouraging, I am so excited to get started!
-            LLM response: That's the spirit! I'm thrilled to see you're feeling motivated and ready to take on new challenges 😁!
-            Human: This has been a very pleasant conversation.
-            LLM response: I completely agree! It's been an absolute delight chatting with you, sharing laughs, and making memories together 🙂. 
-            Human: I have to go now, but I am so sad to be leaving.
-            LLM response: I am sad to see you go as well, I hope to see you again soon 😭.
         """
 
 # Setting a higher temperature will provide more creative, but possibly less accurate answers
@@ -99,14 +69,16 @@ LLM_TEMPERATURE = 0.6
 
 ############################ TTS PARAMETERS ############################################################################
 if VOICE == 'base' :
-    TTS_MODEL_PATH = "/home/paige/Documents/do_you_feel_me/Matcha-TTS/matcha_vctk.ckpt"
+    TTS_MODEL_PATH = "./Matcha-TTS/matcha_vctk.ckpt"
+    SPEAKING_RATE = 0.7
+    STEPS = 10
 else:
-    TTS_MODEL_PATH = "./Matcha-TTS/checkpoint_epoch=2099.ckpt"
+    TTS_MODEL_PATH = "./Matcha-TTS/emojis-hri.ckpt"
+    SPEAKING_RATE = 0.5
+    STEPS = 100
 # hifigan_univ_v1 is suggested, unless the custom model is trained on LJ Speech
 VOCODER_NAME= "hifigan_univ_v1"
-STEPS = 10
 TTS_TEMPERATURE = 0.667
-SPEAKING_RATE = 0.5
 VOCODER_URLS = {
     "hifigan_T2_v1": "https://github.com/shivammehta25/Matcha-TTS-checkpoints/releases/download/v1.0/generator_v1",  # Old url: https://drive.google.com/file/d/14NENd4equCBLyyCSke114Mv6YR_j_uFs/view?usp=drive_link
     "hifigan_univ_v1": "https://github.com/shivammehta25/Matcha-TTS-checkpoints/releases/download/v1.0/g_02500000",  # Old url: https://drive.google.com/file/d/1qpgI41wNXFcH-iKq1Y42JlBC9j0je8PW/view?usp=drive_link
@@ -114,17 +86,17 @@ VOCODER_URLS = {
 
 #maps the emojis used by the LLM to the speaker numbers from the Matcha-TTS checkpoint
 emoji_mapping = {
-    '😍' : 1,
-    '😡' : 2,
-    '😎' : 3,
-    '😭' : 4,
-    '🙄' : 5,
-    '😁' : 6,
-    '🙂' : 7,
-    '🤣' : 8,
-    '😮' : 9,
-    '😅' : 10,
-    '🤔' : 11
+    '😍' : 107,
+    '😡' : 58,
+    '😎' : 79,
+    '😭' : 103,
+    '🙄' : 66,
+    '😁' : 18,
+    '🙂' : 12,
+    '🤣' : 15,
+    '😮' : 54,
+    '😅' : 22,
+    '🤔' : 17
 }
 
 ########################################################################################################################
@@ -273,7 +245,7 @@ if __name__ == "__main__":
 
     asr_model = whisper.load_model(ASR_MODEL)
 
-    tts_device = torch.device("cpu")
+    tts_device = torch.device(TTS_DEVICE)
     paths = assert_required_models_available()
 
     save_dir = get_user_data_dir()
