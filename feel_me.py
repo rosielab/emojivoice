@@ -65,7 +65,7 @@ PROMPT = """
 
 # Setting a higher temperature will provide more creative, but possibly less accurate answers
 # Temperature ranges between 0 and 1
-LLM_TEMPERATURE = 0.6
+LLM_TEMPERATURE = 0.5
 
 ############################ TTS PARAMETERS ############################################################################
 if VOICE == 'base' :
