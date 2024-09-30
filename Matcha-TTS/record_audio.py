@@ -5,6 +5,7 @@ from pynput import keyboard
 
 EMOJI = '🙂'
 EMOTION_NAME = 'pleasant'
+SCRIPT_LOCATION = 'script.txt'
 
 class Recorder:
     def __init__(self):
@@ -54,7 +55,7 @@ def main():
     # Prompt for starting line number
     start_line = int(input("Enter the line number to start from (1-based index): ")) - 1
 
-    with open('script.txt', 'r') as file:
+    with open(SCRIPT_LOCATION, 'r') as file:
         sentences = file.readlines()
 
     # Ensure starting line is within range
