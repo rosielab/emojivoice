@@ -20,6 +20,11 @@ Ollama and langchain chatbot implementation of:
 Fine tuned:
 * [Matcha TTS](https://github.com/shivammehta25/Matcha-TTS)
 
+We currently have 3 available emoji checkpoints:
+* Paige - Female, intense emotions
+* Olivia - Female, subtle emotions
+* Zach - Male
+
 Current checkpoints and data can be found [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing)
 
 Too see per model (WhisperLive and Matcha-TTS) information and make edits within the pipeline see internal READMEs in
