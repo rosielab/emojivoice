@@ -53,6 +53,13 @@ You will need to pull the llama 3 model
 curl -fsSL https://ollama.com/install.sh | sh
 ollama run llama3
 ```
+
+You will need espeak to run Matcha-tts
+
+```
+sudo apt-get install espeak-ng
+```
+
 Then run:
 
 ```
