@@ -42,7 +42,7 @@ SRT_PATH = "output.srt"
 ASR_MODEL = "tiny.en"
 
 ############################### LLM PARAMETERS #########################################################################
-LLM_MODEL = "llama3"
+LLM_MODEL = "llama3.2:1b"
 PROMPT = """
             You are a robot designed to help humans
 
