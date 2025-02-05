@@ -32,7 +32,7 @@ class Recorder:
         self.recording = False
         self.stream = None
 
-    def start_recording(self, filename, fs=44100, channels=1):
+    def start_recording(self, filename, fs=22050, channels=1):
         self.frames = []
         self.recording = True
         self.stream = sd.InputStream(callback=self.callback, channels=channels, samplerate=fs)
