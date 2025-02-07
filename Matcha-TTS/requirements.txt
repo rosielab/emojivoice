@@ -32,7 +32,7 @@ inflect
 Unidecode
 scipy
 torchaudio
-matplotlib
+matplotlib==3.7.0
 pandas
 conformer==0.3.2
 diffusers==0.25.0
@@ -42,3 +42,11 @@ gradio==3.43.2
 gdown
 wget
 seaborn
+sounddevice
+huggingface_hub==0.20.2
+
+# Japnese phonemizer
+fugashi
+jaconv
+mojimoji
+unidic-lite
