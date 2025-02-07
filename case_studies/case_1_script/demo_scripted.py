@@ -17,7 +17,7 @@ elif args.voice == 'emoji':
     folder_path = './scripted_audio/emoji_fine_tuned'
 
 # Create a list of audio files (Assuming filenames are 1.wav, 2.wav, ..., 15.wav)
-audio_files = [f"{i}.wav" for i in range(1, 12)]
+audio_files = [f"{i}.wav" for i in range(1, 23)]
 
 def play_audio(file):
     pygame.mixer.music.load(file)
