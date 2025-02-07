@@ -1,0 +1,9 @@
+Gender,Age,Enthnicity,E_L1,daily_L,E_prof,pro_conv_base,int_conv_base,soc_conv_base,exp_conv_base,suit_conv_base,pro_conv_emoji,int_conv_emoji,soc_conv_emoji,exp_conv_emoji,suit_conv_emoji,pro_conv_def,int_conv_def,soc_conv_def,exp_conv_def,suit_conv_def,first_conv,second_conv,third_conv,pro_story_def,int_story_def,soc_story_def,exp_story_def,suit_story_def,pro_story_base,int_story_base,soc_story_base,exp_story_base,suit_story_base,pro_story_emoji,int_story_emoji,soc_story_emoji,exp_story_emoji,suit_story_emoji,first_story,second_story,third_story
+Female,25-35,Chinese,No,chinese,3,9,10,9,4,10,9,5,8,9,5,7,4,7,7,3,base,emoji,default,7,5,6,6,7,8,10,7,5,10,9,8,8,7,8,emoji,base,default
+Female,18-25,White,Yes,English,5,8,8,5,4,6,5,4,6,7,6,9,7,9,10,8,default,base,emoji,9,8,8,10,9,10,10,6,5,6,6,5,7,8,6,default,base,emoji
+Male,25-35,"West Asian (e.g., Iranian, Afghan)",No,English,4,7,8,4,4,7,3,4,3,3,2,3,6,6,4,4,base,default,emoji,2,2,2,3,2,8,8,7,7,9,5,5,5,5,5,base,emoji,default
+Female,25-35,"West Asian (e.g., Iranian, Afghan)",No,Persian,4,3,10,1,1,2,6,5,7,7,6,7,2,3,4,4,emoji,base,default,4,2,3,3,4,6,10,3,1,4,8,7,8,10,8,emoji,base,default
+Male,25-35,Chinese,No,English,3,9,8,7,2,5,8,5,9,8,7,8,6,9,9,9,base,default,emoji,8,4,6,8,7,8,9,6,7,7,9,8,9,9,10,emoji,default,base
+Female,25-35,Chinese,No,English,4,4,9,5,1,3,3,6,2,7,2,6,7,6,5,3,base,default,emoji,3,2,4,4,4,5,6,3,3,5,6,4,6,7,4,emoji,base,default
+Male,18-25,"South Asian (e.g., East Indian, Pakistani, Sri Lankan)",Yes,English,5,7,9,2,1,8,5,4,8,8,5,4,2,3,3,2,base,emoji,default,2,2,3,2,2,3,7,3,2,7,6,3,8,8,5,base,emoji,default
+Female,18-25,"South Asian (e.g., East Indian, Pakistani, Sri Lankan)",Voice 3,English,5,8,9,6,3,8,8,6,8,8,4,4,3,3,3,6,base,emoji,default,6,3,5,5,8,3,9,3,3,6,8,6,8,9,8,emoji,default,base

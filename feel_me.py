@@ -36,7 +36,7 @@ SRT_PATH = "output.srt"
 ASR_MODEL = "tiny.en"
 
 ############################### LLM PARAMETERS #########################################################################
-LLM_MODEL = "llama3"
+LLM_MODEL = "llama3.2:1b"
 PROMPT = """
             You are a robot designed to help humans
 
@@ -65,17 +65,17 @@ PROMPT = """
 
 # Setting a higher temperature will provide more creative, but possibly less accurate answers
 # Temperature ranges between 0 and 1
-LLM_TEMPERATURE = 0.5
+LLM_TEMPERATURE = 0.6
 
 ############################ TTS PARAMETERS ############################################################################
 if VOICE == 'base' :
     TTS_MODEL_PATH = "./Matcha-TTS/matcha_vctk.ckpt"
-    SPEAKING_RATE = 0.7
+    SPEAKING_RATE = 0.8
     STEPS = 10
 else:
-    TTS_MODEL_PATH = "./Matcha-TTS/emojis-hri.ckpt"
-    SPEAKING_RATE = 0.5
-    STEPS = 100
+    TTS_MODEL_PATH = "./Matcha-TTS/emoji-hri-paige.ckpt"
+    SPEAKING_RATE = 0.8
+    STEPS = 10
 # hifigan_univ_v1 is suggested, unless the custom model is trained on LJ Speech
 VOCODER_NAME= "hifigan_univ_v1"
 TTS_TEMPERATURE = 0.667
