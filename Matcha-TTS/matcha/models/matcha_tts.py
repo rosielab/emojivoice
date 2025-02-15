@@ -17,9 +17,7 @@ from matcha.utils.model import (
     sequence_mask,
 )
 
-CONTEXT_STRETCH = 1
-CONTEXT_COMPRESS = 1
-WORD_STRETCH = 1
+WORD_STRETCH = 1.8
 WORD_COMPRESS = 1
 
 log = utils.get_pylogger(__name__)
@@ -77,146 +75,15 @@ class MatchaTTS(BaseLightningClass):  # 🍵
 
         self.update_data_statistics(data_statistics)
     
-    def clarity_adjust(self, x):
-        function_words = [
-            [0, 83, 0, 44, 0, 156, 0, 138, 0, 64, 0, 3, 0],
-            [0, 83, 0, 53, 0, 123, 0, 156, 0, 69, 0, 158, 0, 61, 0, 3, 0],
-            [0, 70, 0, 55, 0, 156, 0, 138, 0, 112, 0, 3, 0],
-            [0, 70, 0, 55, 0, 156, 0, 138, 0, 112, 0, 61, 0, 62, 0, 3, 0],
-            [0, 70, 0, 56, 0, 156, 0, 138, 0, 81, 0, 85, 0, 3, 0],
-            [0, 156, 0, 86, 0, 56, 0, 102, 0, 50, 0, 157, 0, 43, 0, 135, 0, 3, 0],
-            [0, 156, 0, 86, 0, 56, 0, 102, 0, 65, 0, 157, 0, 138, 0, 56, 0, 3, 0],
-            [0, 156, 0, 86, 0, 56, 0, 102, 0, 119, 0, 157, 0, 102, 0, 112, 0, 3, 0],
-            [0, 156, 0, 86, 0, 56, 0, 102, 0, 65, 0, 157, 0, 47, 0, 102, 0, 3, 0],
-            [0, 156, 0, 86, 0, 56, 0, 102, 0, 65, 0, 157, 0, 86, 0, 123, 0, 3, 0],
-            [0, 69, 0, 158, 0, 123, 0, 3, 0],
-            [0, 44, 0, 156, 0, 51, 0, 158, 0, 3, 0],
-            [0, 44, 0, 102, 0, 53, 0, 156, 0, 47, 0, 102, 0, 55, 0, 3, 0],
-            [0, 44, 0, 102, 0, 53, 0, 156, 0, 138, 0, 68, 0, 3, 0],
-            [0, 44, 0, 156, 0, 51, 0, 158, 0, 102, 0, 112, 0, 3, 0],
-            [0, 44, 0, 177, 0, 62, 0, 65, 0, 156, 0, 51, 0, 158, 0, 56, 0, 3, 0],
-            [0, 53, 0, 72, 0, 56, 0, 156, 0, 69, 0, 158, 0, 62, 0, 3, 0],
-            [0, 46, 0, 156, 0, 102, 0, 46, 0, 3, 0],
-            [0, 46, 0, 156, 0, 63, 0, 158, 0],
-            [0, 46, 0, 156, 0, 138, 0, 68, 0, 3, 0],
-            [0, 46, 0, 156, 0, 135, 0, 123, 0, 123, 0, 102, 0, 112, 0, 3, 0],
-            [0, 156, 0, 51, 0, 158, 0, 81, 0, 85, 0, 3, 0],
-            [0, 102, 0, 56, 0, 156, 0, 138, 0, 48, 0, 3, 0],
-            [0, 156, 0, 51, 0, 158, 0, 64, 0, 83, 0, 56, 0, 3, 0],
-            [0, 156, 0, 86, 0, 64, 0, 123, 0, 102, 0, 65, 0, 157, 0, 138, 0, 56, 0, 3, 0],
-            [0, 156, 0, 86, 0, 64, 0, 123, 0, 102, 0, 119, 0, 157, 0, 102, 0, 112, 0, 3, 0],
-            [0, 156, 0, 86, 0, 64, 0, 123, 0, 102, 0, 65, 0, 157, 0, 86, 0, 123, 0, 3, 0],
-            [0, 48, 0, 52, 0, 156, 0, 63, 0, 158, 0, 3, 0],
-            [0, 48, 0, 123, 0, 138, 0, 55, 0, 3, 0],
-            [0, 50, 0, 51, 0, 158, 0, 3, 0],
-            [0, 50, 0, 156, 0, 102, 0, 123, 0, 3, 0],
-            [0, 50, 0, 156, 0, 102, 0, 123, 0, 70, 0, 44, 0, 157, 0, 43, 0, 135, 0, 62, 0, 61, 0, 3, 0],
-            [0, 50, 0, 102, 0, 123, 0, 156, 0, 72, 0, 48, 0, 62, 0, 85, 0, 3, 0],
-            [0, 50, 0, 156, 0, 102, 0, 123, 0, 44, 0, 43, 0, 102, 0, 3, 0],
-            [0, 50, 0, 102, 0, 123, 0, 156, 0, 102, 0, 56, 0, 3, 0],
-            [0, 50, 0, 156, 0, 102, 0, 123, 0, 102, 0, 56, 0, 157, 0, 72, 0, 48, 0, 62, 0, 85, 0],
-            [0, 50, 0, 156, 0, 102, 0, 123, 0, 62, 0, 135, 0, 48, 0, 157, 0, 57, 0, 158, 0, 123, 0, 3, 0],
-            [0, 50, 0, 156, 0, 102, 0, 123, 0, 138, 0, 56, 0, 46, 0, 85, 0, 3, 0],
-            [0, 50, 0, 156, 0, 102, 0, 123, 0, 83, 0, 58, 0, 157, 0, 69, 0, 158, 0, 56, 0, 3, 0],
-            [0, 50, 0, 102, 0, 123, 0, 65, 0, 156, 0, 102, 0, 81, 0, 3, 0],
-            [0, 50, 0, 157, 0, 102, 0, 55, 0, 3, 0],
-            [0, 50, 0, 102, 0, 55, 0, 61, 0, 156, 0, 86, 0, 54, 0, 48, 0, 3, 0],
-            [0, 50, 0, 156, 0, 102, 0, 68, 0, 3, 0],
-            [0, 156, 0, 43, 0, 102, 0, 51, 0, 158, 0, 3, 0],
-            [0, 102, 0, 48, 0, 3, 0],
-            [0, 156, 0, 102, 0, 56, 0, 3, 0],
-            [0, 157, 0, 102, 0, 56, 0, 46, 0, 156, 0, 51, 0, 158, 0, 46, 0, 3, 0],
-            [0, 102, 0, 56, 0, 61, 0, 156, 0, 43, 0, 102, 0, 46, 0, 3, 0],
-            [0, 102, 0, 56, 0, 61, 0, 62, 0, 156, 0, 86, 0, 46, 0, 3, 0],
-            [0, 157, 0, 102, 0, 56, 0, 62, 0, 135, 0, 3, 0],
-            [0, 102, 0, 68, 0, 3, 0],
-            [0, 102, 0, 62, 0, 3, 0],
-            [0, 102, 0, 125, 0],
-            [0, 102, 0, 68, 0],
-            [0, 156, 0, 51, 0, 158, 0, 64, 0, 83, 0, 56, 0],
-            [0, 156, 0, 102, 0, 68, 0],
-            [0, 102, 0, 62, 0, 61, 0, 3, 0],
-            [0, 102, 0, 62, 0, 61, 0, 156, 0, 86, 0, 54, 0, 48, 0, 3, 0],
-            [0, 54, 0, 156, 0, 69, 0, 158, 0, 62, 0, 3, 0],
-            [0, 54, 0, 156, 0, 69, 0, 158, 0, 62, 0, 61, 0, 3, 0],
-            [0, 55, 0, 156, 0, 51, 0, 158, 0, 3, 0],
-            [0, 55, 0, 156, 0, 51, 0, 158, 0, 56, 0, 65, 0, 43, 0, 102, 0, 54, 0],
-            [0, 55, 0, 156, 0, 57, 0, 135, 0, 61, 0, 62, 0, 54, 0, 51, 0, 3, 0],
-            [0, 55, 0, 156, 0, 138, 0, 62, 0, 131, 0, 3, 0],
-            [0, 55, 0, 156, 0, 138, 0, 61, 0, 62, 0, 3, 0],
-            [0, 56, 0, 156, 0, 47, 0, 102, 0, 55, 0, 54, 0, 51, 0, 3, 0],
-            [0, 56, 0, 156, 0, 102, 0, 123, 0, 3, 0],
-            [0, 56, 0, 156, 0, 51, 0, 158, 0, 46, 0, 3, 0],
-            [0, 56, 0, 156, 0, 51, 0, 158, 0, 81, 0, 85, 0, 3, 0],
-            [0, 56, 0, 156, 0, 57, 0, 135, 0, 44, 0, 69, 0, 158, 0, 46, 0, 51, 0, 3, 0],
-            [0, 56, 0, 156, 0, 138, 0, 56, 0, 3, 0],
-            [0, 56, 0, 156, 0, 57, 0, 135, 0, 65, 0, 138, 0, 56, 0, 3, 0],
-            [0, 56, 0, 156, 0, 69, 0, 158, 0, 62, 0, 3, 0],
-            [0, 56, 0, 156, 0, 138, 0, 119, 0, 102, 0, 112, 0, 4, 0],
-            [0, 138, 0, 64, 0, 3, 0],
-            [0, 65, 0, 156, 0, 138, 0, 56, 0, 61, 0, 3, 0],
-            [0, 65, 0, 156, 0, 138, 0, 56, 0, 3, 0],
-            [0, 156, 0, 69, 0, 158, 0, 56, 0, 62, 0, 135, 0, 3, 0],
-            [0, 156, 0, 138, 0, 81, 0, 85, 0, 3, 0],
-            [0, 156, 0, 138, 0, 81, 0, 85, 0, 68, 0, 3, 0],
-            [0, 156, 0, 138, 0, 81, 0, 85, 0, 65, 0, 157, 0, 43, 0, 102, 0, 68, 0, 3, 0],
-            [0, 123, 0, 157, 0, 51, 0, 158, 0, 3, 0],
-            [0, 131, 0, 51, 0, 158, 0, 3, 0],
-            [0, 61, 0, 156, 0, 102, 0, 56, 0, 61, 0],
-            [0, 61, 0, 157, 0, 138, 0, 55, 0, 3, 0],
-            [0, 61, 0, 156, 0, 138, 0, 55, 0, 50, 0, 43, 0, 135, 0, 3, 0],
-            [0, 61, 0, 156, 0, 138, 0, 55, 0, 65, 0, 138, 0, 56, 0, 3, 0],
-            [0, 61, 0, 156, 0, 138, 0, 55, 0, 119, 0, 102, 0, 112, 0, 3, 0],
-            [0, 61, 0, 156, 0, 138, 0, 55, 0, 62, 0, 43, 0, 102, 0, 55, 0, 3, 0],
-            [0, 61, 0, 156, 0, 138, 0, 55, 0, 62, 0, 43, 0, 102, 0, 55, 0, 68, 0, 3, 0],
-            [0, 61, 0, 156, 0, 138, 0, 55, 0, 65, 0, 138, 0, 62, 0, 3, 0],
-            [0, 61, 0, 156, 0, 138, 0, 55, 0, 65, 0, 86, 0, 123, 0, 3, 0],
-            [0, 61, 0, 156, 0, 138, 0, 62, 0, 131, 0, 3, 0],
-            [0, 81, 0, 86, 0, 123, 0, 156, 0, 102, 0, 56, 0, 3, 0],
-            [0, 81, 0, 86, 0, 123, 0, 156, 0, 69, 0, 158, 0, 64, 0, 3, 0],
-            [0, 81, 0, 86, 0, 123, 0, 156, 0, 69, 0, 158, 0, 56, 0, 3, 0],
-            [0, 81, 0, 86, 0, 123, 0, 156, 0, 138, 0, 58, 0, 69, 0, 158, 0, 56, 0, 3, 0],
-            [0, 81, 0, 156, 0, 51, 0, 158, 0, 68, 0, 3, 0],
-            [0, 81, 0, 156, 0, 102, 0, 61, 0, 3, 0],
-            [0, 119, 0, 123, 0, 156, 0, 63, 0, 158, 0],
-            [0, 119, 0, 123, 0, 63, 0, 158, 0, 156, 0, 43, 0, 135, 0, 62, 0, 3, 0],
-            [0, 119, 0, 123, 0, 156, 0, 63, 0, 158, 0, 3, 0],
-            [0, 81, 0, 156, 0, 138, 0, 61, 0, 3, 0],
-            [0, 62, 0, 156, 0, 63, 0, 158, 0, 3, 0],
-            [0, 62, 0, 156, 0, 69, 0, 158, 0, 58, 0, 3, 0],
-            [0, 156, 0, 138, 0, 56, 0, 46, 0, 85, 0, 3, 0],
-            [0, 138, 0, 56, 0, 62, 0, 156, 0, 102, 0, 54, 0, 3, 0],
-            [0, 156, 0, 138, 0, 58, 0, 3, 0],
-            [0, 83, 0, 58, 0, 157, 0, 69, 0, 158, 0, 56, 0, 3, 0],
-            [0, 157, 0, 138, 0, 61, 0, 3, 0],
-            [0, 52, 0, 156, 0, 63, 0, 158, 0, 68, 0, 46, 0, 3, 0],
-            [0, 64, 0, 156, 0, 86, 0, 123, 0, 51, 0, 3, 0],
-            [0, 65, 0, 138, 0, 68, 0, 3, 0],
-            [0, 65, 0, 51, 0, 158, 0, 3, 0],
-            [0, 65, 0, 138, 0, 62, 0, 156, 0, 86, 0, 64, 0, 85, 0, 3, 0],
-            [0, 65, 0, 156, 0, 86, 0, 123, 0, 102, 0, 56, 0, 3, 0],
-            [0, 65, 0, 156, 0, 86, 0, 123, 0, 83, 0, 58, 0, 157, 0, 69, 0, 158, 0, 56, 0, 3, 0],
-            [0, 65, 0, 156, 0, 102, 0, 62, 0, 131, 0, 3, 0],
-            [0, 65, 0, 156, 0, 102, 0, 81, 0, 85, 0, 3, 0],
-            [0, 50, 0, 156, 0, 63, 0, 158, 0, 3, 0],
-            [0, 50, 0, 63, 0, 158, 0, 156, 0, 86, 0, 64, 0, 85, 0],
-            [0, 50, 0, 156, 0, 63, 0, 158, 0, 55, 0, 3, 0],
-            [0, 50, 0, 157, 0, 63, 0, 158, 0, 68, 0, 3, 0],
-            [0, 65, 0, 102, 0, 81, 0, 3, 0],
-            [0, 65, 0, 102, 0, 81, 0, 156, 0, 102, 0, 56, 0, 3, 0],
-            [0, 65, 0, 102, 0, 81, 0, 156, 0, 43, 0, 135, 0, 62, 0, 3, 0],
-            [0, 65, 0, 156, 0, 135, 0, 46, 0, 3, 0],
-            [0, 52, 0, 63, 0, 158, 0, 3, 0],
-            [0, 52, 0, 135, 0, 123, 0],
-            [0, 92, 0, 156, 0, 135, 0, 46, 0],
-            [0, 119, 0, 156, 0, 102, 0, 112, 0, 53, 0],
-            [  0,  50,   0, 157,   0, 102,   0,  55,   0],
-        ]
+    def clarity_adjust(self, x, device):
         target_vowels = [51, 102, 135, 63, 138, 69]
         word_dict = {}
         start = 0
         phonemes = x[0]
         clarity_dict = {}
+
+        updated_phonemes = []
+        offset = 0
 
         for index, value in enumerate(phonemes):
             if value == 16:
@@ -232,9 +99,20 @@ class MatchaTTS(BaseLightningClass):  # 🍵
             tense = False
             lax = False
             both = False
-            if word in function_words:
-                continue
-            else:
+            punctuation = False
+            # detect the clarity flag
+            if word[1] == 5:
+                # if not before punctuation
+                if word[-2] == 5:
+                    print("hi")
+                    word = word[2:-2]
+                # followed by punctuation
+                elif word[-4] ==  5:
+                    print('heyo')
+                    del word[2]
+                    del word[-3]
+                    del word[-3]
+                    punctuation = True
                 for i, letter in enumerate(word):
                     if letter in target_vowels and word[i-2] == 156:
                         #has the primary stress
@@ -252,16 +130,17 @@ class MatchaTTS(BaseLightningClass):  # 🍵
                             letter == 102 and
                             word[i-2] != 43 and
                             word[i-2] != 47 and
-                            word[i-2] != 76 and
-                            word[i+2] != 112
+                            word[i-2] != 76
                         ):
-                            if tense == False:
-                                lax = True
-                            #tense and lax vowel in one word 
-                            else: # issue here because will stop searching and maybe primary stress is later
-                                tense = False
-                                lax = False
-                                both = True
+                            if (i+2 < len(word)):
+                                if word[i+2] != 112:
+                                    if tense == False:
+                                        lax = True
+                                    #tense and lax vowel in one word
+                                    else: # issue here because will stop searching and maybe primary stress is later
+                                        tense = False
+                                        lax = False
+                                        both = True
                         # is ʊ and is not joined into a dipthong
                         elif letter == 135 and word[i-2] != 43 and word[i-2] != 57:
                             if tense == False:
@@ -286,12 +165,22 @@ class MatchaTTS(BaseLightningClass):  # 🍵
                                 tense = False
                                 lax = False
                                 both = True
+                adjusted_index = word_index - offset
                 if tense:
-                    clarity_dict[word_index] = ["tense", len(word)]
+                    clarity_dict[word_index - offset] = ["tense", len(word)]
                 if lax:
-                    clarity_dict[word_index] = ["lax", len(word)]
+                    clarity_dict[word_index - offset] = ["lax", len(word)]
+                offset += 2
+                if punctuation:
+                    offset += 1
+            if updated_phonemes:
+                updated_phonemes.append(16)  # Insert separator between words
+            updated_phonemes.extend(word)
 
-        clarity_array = [1] * len(phonemes)
+        if updated_phonemes:
+            clarity_array = [1] * len(updated_phonemes)
+        else:
+            clarity_array = [1] * len(phonemes)
 
         if clarity_dict:
             last_index = 0
@@ -335,10 +224,10 @@ class MatchaTTS(BaseLightningClass):  # 🍵
                 # Update last_index
                 last_index = index + count + ramp_length_after
 
-        # Assign trailing 1s for the rest of the array
-        clarity_array[last_index:] = [1] * (len(phonemes) - last_index)
+            # Assign trailing 1s for the rest of the array
+            clarity_array[last_index:] = [1] * (len(updated_phonemes) - last_index)
  
-        return clarity_array
+        return torch.tensor(clarity_array,dtype=torch.float, device=device), torch.tensor([updated_phonemes],dtype=torch.long, device=device)
 
     @torch.inference_mode()
     def synthesise(self, x, x_lengths, n_timesteps, temperature=1.0, spks=None, length_scale=1.0, clarity=False):
@@ -375,7 +264,6 @@ class MatchaTTS(BaseLightningClass):  # 🍵
                 "rtf": float,
                 # Real-time factor
         """
-
         clarity_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # For RTF computation
@@ -385,25 +273,14 @@ class MatchaTTS(BaseLightningClass):  # 🍵
             # Get speaker embedding
             spks = self.spk_emb(spks.long())
 
+        if clarity:
+            clarity_array, x = self.clarity_adjust(x, clarity_device)
+
         # Get encoder_outputs `mu_x` and log-scaled token durations `logw`
         mu_x, logw, x_mask = self.encoder(x, x_lengths, spks)
-
-#above, across, among, amongst, another,  anyhow, anyone, anything, anyway,anywhere, are, be, became, because, being, between, cannot, did, do  
-#does,  during, either, enough, even, everyone, everything, everywhere, few, from, he, here, hereabouts, hereafter, hereby, herein, hereinafter
-#heretofore, hereunder, hereupon, herewith, him, himself, his, ie, if, in, indeed, inside, instead, into, is, it, its, itself, lot, lots, me, meanwhile 
-#mostly, much, must, namely, near, need, neither,  nobody, none, noone, not, nothing. of, once, one, onto, other, others, otherwise, re, she, since
-#some, somehow, someone, something, sometime, sometimes, somewhat, somewhere, such, therein, thereof, thereon, thereupon, these, this, through
-#throughout, thru, thus, too, top, under, until, up, upon, us, used, very, was, we, whatever, wherein, whereupon, which, whither, who, whoever, think
-#whom, whose, with, within, without, would, you, your, even, good
-
-# something like what, do we ignore... it occurs super often, but it has s minimal pair whith watt, but maybe only apply it to watt? samw with wad and would
-# but is another, we have bot, but way less often... maybe just ignore bu, we also both of these we don't really need ot change tense anyhow
-
         w = torch.exp(logw) * x_mask
         w_ceil = torch.ceil(w) * length_scale
         if clarity:
-            print("doing clear voice")
-            clarity_array = torch.Tensor(self.clarity_adjust(x)).to(clarity_device)
             w_ceil = w_ceil * clarity_array
         y_lengths = torch.clamp_min(torch.sum(w_ceil, [1, 2]), 1).long()
         y_max_length = y_lengths.max()
