@@ -42,7 +42,7 @@ SRT_PATH = "output.srt"
 ASR_MODEL = "tiny.en"
 
 ############################### LLM PARAMETERS #########################################################################
-LLM_MODEL = "llama3"
+LLM_MODEL = "llama3.2:1b"
 PROMPT = """
             You are a robot designed to help humans
 
@@ -78,12 +78,12 @@ LLM_TEMPERATURE = 0.6
 ############################ TTS PARAMETERS ############################################################################
 if VOICE == 'base' :
     TTS_MODEL_PATH = "../../Matcha-TTS/matcha_vctk.ckpt"
-    SPEAKING_RATE = 0.7
+    SPEAKING_RATE = 0.8
     STEPS = 10
 else:
-    TTS_MODEL_PATH = "../../Matcha-TTS/emojis-hri.ckpt"
-    SPEAKING_RATE = 0.5
-    STEPS = 100
+    TTS_MODEL_PATH = "../../Matcha-TTS/emoji-hri-zach.ckpt"
+    SPEAKING_RATE = 0.8
+    STEPS = 10
 # hifigan_univ_v1 is suggested, unless the custom model is trained on LJ Speech
 VOCODER_NAME= "hifigan_univ_v1"
 TTS_TEMPERATURE = 0.667
@@ -93,18 +93,32 @@ VOCODER_URLS = {
 }
 
 #maps the emojis used by the LLM to the speaker numbers from the Matcha-TTS checkpoint
+#emoji_mapping = {
+#    '😍' : 107,
+#    '😡' : 58,
+#    '😎' : 79,
+#    '😭' : 103,
+#    '🙄' : 66,
+#    '😁' : 18,
+#    '🙂' : 12,
+#    '🤣' : 15,
+#    '😮' : 54,
+#    '😅' : 22,
+#    '🤔' : 17
+#}
+
 emoji_mapping = {
-    '😍' : 107,
-    '😡' : 58,
-    '😎' : 79,
-    '😭' : 103,
-    '🙄' : 66,
-    '😁' : 18,
-    '🙂' : 12,
-    '🤣' : 15,
-    '😮' : 54,
-    '😅' : 22,
-    '🤔' : 17
+    '😍' : 4,
+    '😡' : 5,
+    '😎' : 6,
+    '😭' : 13,
+    '🙄' : 16,
+    '😁' : 26,
+    '🙂' : 30,
+    '🤣' : 38,
+    '😮' : 60,
+    '😅' : 82,
+    '🤔' : 97
 }
 
 ########################################################################################################################

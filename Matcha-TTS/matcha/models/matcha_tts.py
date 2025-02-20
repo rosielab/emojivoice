@@ -17,6 +17,9 @@ from matcha.utils.model import (
     sequence_mask,
 )
 
+WORD_STRETCH = 1.8
+WORD_COMPRESS = 1
+
 log = utils.get_pylogger(__name__)
 
 
@@ -71,9 +74,163 @@ class MatchaTTS(BaseLightningClass):  # 🍵
         )
 
         self.update_data_statistics(data_statistics)
+    
+    def clarity_adjust(self, x, device):
+        target_vowels = [51, 102, 135, 63, 138, 69]
+        word_dict = {}
+        start = 0
+        phonemes = x[0]
+        clarity_dict = {}
+
+        updated_phonemes = []
+        offset = 0
+
+        for index, value in enumerate(phonemes):
+            if value == 16:
+                word_dict[start] = phonemes[start:index]
+                start = index + 1
+
+        # Add the remaining part of the list (after the last 16)
+        if start < len(phonemes):
+            word_dict[start] = phonemes[start:]
+
+        for word_index in word_dict:
+            word = word_dict[word_index].tolist()
+            tense = False
+            lax = False
+            both = False
+            punctuation = False
+            # detect the clarity flag
+            if word[1] == 5:
+                # if not before punctuation
+                if word[-2] == 5:
+                    print("hi")
+                    word = word[2:-2]
+                # followed by punctuation
+                elif word[-4] ==  5:
+                    print('heyo')
+                    del word[2]
+                    del word[-3]
+                    del word[-3]
+                    punctuation = True
+                for i, letter in enumerate(word):
+                    if letter in target_vowels and word[i-2] == 156:
+                        #has the primary stress
+                        if letter == 51 or letter == 63 or letter == 69:
+                            tense = True
+                            lax = False
+                            break
+                        else:
+                            lax = True
+                            tense = False
+                            break
+                    if both != True:
+                        # is ɪ and not joined into a dipthong, and is not in "ing"
+                        if (
+                            letter == 102 and
+                            word[i-2] != 43 and
+                            word[i-2] != 47 and
+                            word[i-2] != 76
+                        ):
+                            if (i+2 < len(word)):
+                                if word[i+2] != 112:
+                                    if tense == False:
+                                        lax = True
+                                    #tense and lax vowel in one word
+                                    else: # issue here because will stop searching and maybe primary stress is later
+                                        tense = False
+                                        lax = False
+                                        both = True
+                        # is ʊ and is not joined into a dipthong
+                        elif letter == 135 and word[i-2] != 43 and word[i-2] != 57:
+                            if tense == False:
+                                lax == True
+                            else: # again need to fix this
+                                tense = False
+                                lax = False
+                                both = True
+                        # is ʌ
+                        elif letter == 138:
+                            if tense == False:
+                                lax = True
+                            else:
+                                tense = False
+                                lax = False
+                                both = True
+                        # is i and not at the end of a word, or is u or is ɑ
+                        elif letter == 69 or letter == 63 or (letter == 51 and i != len(word)-1):
+                            if lax == False:
+                                tense == True
+                            else:
+                                tense = False
+                                lax = False
+                                both = True
+                adjusted_index = word_index - offset
+                if tense:
+                    clarity_dict[word_index - offset] = ["tense", len(word)]
+                if lax:
+                    clarity_dict[word_index - offset] = ["lax", len(word)]
+                offset += 2
+                if punctuation:
+                    offset += 1
+            if updated_phonemes:
+                updated_phonemes.append(16)  # Insert separator between words
+            updated_phonemes.extend(word)
+
+        if updated_phonemes:
+            clarity_array = [1] * len(updated_phonemes)
+        else:
+            clarity_array = [1] * len(phonemes)
+
+        if clarity_dict:
+            last_index = 0
+
+            for idx, index in enumerate(clarity_dict):
+                type_, count = clarity_dict[index]
+                count = int(count)
+                next_index = (
+                    list(clarity_dict.keys())[idx + 1] if idx + 1 < len(clarity_dict) else len(clarity_array)
+                )
+
+                # Calculate available space for ramps
+                space_after = next_index - (index + count)
+                ramp_length_before = min(6, index - last_index)
+                ramp_length_after = min(6, space_after)
+
+                if type_ == "tense":
+                    # Gradually increase from 1 to WORD_STRETCH
+                    for i in range(index - ramp_length_before, index):
+                        clarity_array[i] = 1 + (WORD_STRETCH - 1) * (i - (index - ramp_length_before)) / ramp_length_before
+
+                    # Assign WORD_STRETCH to the core region
+                    clarity_array[index:index + count] = [WORD_STRETCH] * count
+
+                    # Gradually decrease from WORD_STRETCH to 1
+                    for j in range(index + count, index + count + ramp_length_after):
+                        clarity_array[j] = WORD_STRETCH - (WORD_STRETCH - 1) * (j - (index + count)) / ramp_length_after
+
+                elif type_ == "lax":
+                    # Gradually increase from 1 to WORD_COMPRESS
+                    for i in range(index - ramp_length_before, index):
+                        clarity_array[i] = 1 + (WORD_COMPRESS - 1) * (i - (index - ramp_length_before)) / ramp_length_before
+
+                    # Assign WORD_COMPRESS to the core region
+                    clarity_array[index:index + count] = [WORD_COMPRESS] * count
+    
+                    # Gradually decrease from WORD_COMPRESS to 1
+                    for j in range(index + count, index + count + ramp_length_after):
+                        clarity_array[j] = WORD_COMPRESS - (WORD_COMPRESS - 1) * (j - (index + count)) / ramp_length_after
+    
+                # Update last_index
+                last_index = index + count + ramp_length_after
+
+            # Assign trailing 1s for the rest of the array
+            clarity_array[last_index:] = [1] * (len(updated_phonemes) - last_index)
+ 
+        return torch.tensor(clarity_array,dtype=torch.float, device=device), torch.tensor([updated_phonemes],dtype=torch.long, device=device)
 
     @torch.inference_mode()
-    def synthesise(self, x, x_lengths, n_timesteps, temperature=1.0, spks=None, length_scale=1.0):
+    def synthesise(self, x, x_lengths, n_timesteps, temperature=1.0, spks=None, length_scale=1.0, clarity=False):
         """
         Generates mel-spectrogram from text. Returns:
             1. encoder outputs
@@ -107,6 +264,8 @@ class MatchaTTS(BaseLightningClass):  # 🍵
                 "rtf": float,
                 # Real-time factor
         """
+        clarity_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         # For RTF computation
         t = dt.datetime.now()
 
@@ -114,11 +273,15 @@ class MatchaTTS(BaseLightningClass):  # 🍵
             # Get speaker embedding
             spks = self.spk_emb(spks.long())
 
+        if clarity:
+            clarity_array, x = self.clarity_adjust(x, clarity_device)
+
         # Get encoder_outputs `mu_x` and log-scaled token durations `logw`
         mu_x, logw, x_mask = self.encoder(x, x_lengths, spks)
-
         w = torch.exp(logw) * x_mask
         w_ceil = torch.ceil(w) * length_scale
+        if clarity:
+            w_ceil = w_ceil * clarity_array
         y_lengths = torch.clamp_min(torch.sum(w_ceil, [1, 2]), 1).long()
         y_max_length = y_lengths.max()
         y_max_length_ = fix_len_compatibility(y_max_length)
@@ -147,7 +310,7 @@ class MatchaTTS(BaseLightningClass):  # 🍵
             "mel": denormalize(decoder_outputs, self.mel_mean, self.mel_std),
             "mel_lengths": y_lengths,
             "rtf": rtf,
-        }
+        }       
 
     def forward(self, x, x_lengths, y, y_lengths, spks=None, out_size=None, cond=None, durations=None):
         """
