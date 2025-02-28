@@ -54,6 +54,11 @@ curl -fsSL https://ollama.com/install.sh | sh
 ollama run llama3
 ```
 
+If not already running ollama, you may need to run this before run llama3
+```
+ollama serve
+```
+
 You will need espeak to run Matcha-tts
 
 ```
