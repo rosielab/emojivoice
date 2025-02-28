@@ -10,7 +10,7 @@ from scp import SCPClient
 import pyaudio
 import wave
 
-demo = "storybuilding" # Replace with the name of the demo you want to run
+demo = "storytelling" # Replace with the name of the demo you want to run
 pepper_ip = "10.0.0.4"  # Replace with Pepper's IP address
 
 storytelling_output_path = demo + "/outputs/"
@@ -38,17 +38,20 @@ class AuthenticatorFactory:
 def transfer_file_with_scp(pepper_ip, local_file, remote_path, username='nao', password='nao'):
     # try to transfer the file to Pepper using SCP, if it fails, try again
     try:
+        # Connect to Pepper
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(pepper_ip, username=username, password=password)
+        
         with SCPClient(ssh.get_transport()) as scp:
             print(f"Transferring file '{local_file}' to '{remote_path}'...")
             scp.put(local_file, remote_path)
         ssh.close()
+
     except Exception as e:
         print(f"Failed to transfer file: {e}")
         print("Retrying...")
-        time.sleep(0.5)
+        time.sleep(0.25)
         transfer_file_with_scp(pepper_ip, local_file, remote_path, username, password)
 
 
@@ -80,13 +83,26 @@ def format_audio_file(input_file): #pepper only supports 16 bit audio files
     audio = audio.set_sample_width(2)
     audio.export(input_file+"_16b.wav", format="wav")
 
+def run_animation_on_pepper(animation_name = "top"):
+    # connect to pepper
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(pepper_ip, username='nao', password='nao')
+
+    command = f"qicli call ALAnimationPlayer.runTag '{animation_name}'"
+    stdin, stdout, stderr = ssh.exec_command(command)
+    ssh.close()
+
 def play_audio_file(ip, file_path, file_name="output"):
     audio_player_service = app.session.service("ALAudioPlayer")
     remote_path = "/home/nao/" + file_name +"_16b.wav"
     format_audio_file(file_path)
-    transfer_file_with_scp(ip, file_path+"_16b.wav", remote_path)
 
+    transfer_file_with_scp(ip, file_path+"_16b.wav", remote_path)
     print(remote_path)
+
+    run_animation_on_pepper()
+
     audio_player_service.playFile(remote_path)
 
     delete_remote_file(pepper_ip, remote_path)
@@ -129,11 +145,14 @@ if demo == "storybuilding":
         play_audio_file(pepper_ip, storybuilding_output_path + "output")
     
 elif demo == "storytelling":
-    for i in range(17): #number of audio files to play
+    #check the script txt file to see how many lines there are, then play that many audio files
+    num_lines = sum(1 for line in open(storytelling_output_path + "script.txt"))
+    print(f"Number of lines in script.txt: {num_lines}")
+
+    for i in range(num_lines): 
         wait_for_file_update(storytelling_output_path + "to_play-" + str(i) + ".wav", "storytelling")
         print(f"Playing file {i}")
         play_audio_file(pepper_ip, storytelling_output_path + 'to_play-' +  str(i), 'to_play-' +  str(i))
-
 
         #test code to play audio file on the computer
 
