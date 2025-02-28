@@ -12,7 +12,7 @@ import wave
 
 demo = "storytelling" # Replace with the name of the demo you want to run
 pepper_ip = "10.0.0.4"  # Replace with Pepper's IP address
-script = "fairytale_script.txt" # Replace with the name of the script file
+script = "storytelling/fairytale_script.txt" # Replace with the name of the script file
 
 storytelling_output_path = demo + "/outputs/"
 storybuilding_output_path = demo + "/outputs/"
