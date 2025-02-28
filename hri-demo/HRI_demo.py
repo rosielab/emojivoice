@@ -12,6 +12,7 @@ import wave
 
 demo = "storytelling" # Replace with the name of the demo you want to run
 pepper_ip = "10.0.0.4"  # Replace with Pepper's IP address
+script = "fairytale_script.txt" # Replace with the name of the script file
 
 storytelling_output_path = demo + "/outputs/"
 storybuilding_output_path = demo + "/outputs/"
@@ -146,7 +147,7 @@ if demo == "storybuilding":
     
 elif demo == "storytelling":
     #check the script txt file to see how many lines there are, then play that many audio files
-    num_lines = sum(1 for line in open(storytelling_output_path + "script.txt"))
+    num_lines = sum(1 for line in open(script))
     print(f"Number of lines in script.txt: {num_lines}")
 
     for i in range(num_lines): 
