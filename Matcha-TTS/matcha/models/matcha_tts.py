@@ -104,7 +104,6 @@ class MatchaTTS(BaseLightningClass):  # 🍵
             if word[1] == 5:
                 # if not before punctuation
                 if word[-2] == 5:
-                    print("hi")
                     word = word[2:-2]
                 # followed by punctuation
                 elif word[-4] ==  5:
