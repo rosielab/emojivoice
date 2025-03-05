@@ -100,6 +100,9 @@ Matcha TTS can be fine tuned for your own emojis within as little as 2 minutes o
 The new checkpoint can be trained directly from the base Matcha-tts checkpoint (see [README](/Matcha-TTS/README.md)
 for links) or from our provided checkpoint.
 
+When fine tuning you will be overwriting the current voices, in general, we have produced better quality voices when
+selecting a voice to overwrite that is more similar to the target voice, e.g. same accent and gender.
+
 Follow the information in [README](/Matcha-TTS/README.md) for fine tuning on the *vctk* checkpoint where each speaker
 is an emoji. You may see our data
 [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing) as an example.
