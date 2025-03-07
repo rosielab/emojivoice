@@ -84,7 +84,7 @@ if __name__ == "__main__":
     import sounddevice as sd
 
     VOICE = 'emoji'
-    CLARITY = False
+    #CLARITY = False
     WAV_PATH = "./outputs"
     TTS_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     SRT_PATH = "output.srt"
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         SPEAKING_RATE = 0.8
         STEPS = 10
     else:
-        TTS_MODEL_PATH = "../../Matcha-TTS/emoji-hri-paige-inference.ckpt"
+        TTS_MODEL_PATH = "../../Matcha-TTS/emoji-hri-paige.ckpt"
         SPEAKING_RATE = 0.8
         STEPS = 10
     VOCODER_NAME= "hifigan_univ_v1"
@@ -143,6 +143,20 @@ if __name__ == "__main__":
         '😅' : 22,
         '🤔' : 17
     }
+    #male voice mapping
+    #emoji_mapping = {
+    #    '😍' : 4,
+    #    '😡' : 5,
+    #    '😎' : 6,
+    #    '😭' : 13,
+    #    '🙄' : 16,
+    #    '😁' : 26,
+    #    '🙂' : 30,
+    #    '🤣' : 38,
+    #    '😮' : 60,
+    #    '😅' : 82,
+    #    '🤔' : 97
+    #}
 
     def get_llm(temperature):
         return ChatOllama(model=LLM_MODEL, temperature=temperature)
@@ -219,7 +233,7 @@ if __name__ == "__main__":
             temperature=TTS_TEMPERATURE,
             spks=spk,
             length_scale=SPEAKING_RATE,
-            clarity = CLARITY,
+            #clarity = CLARITY,
         )
         output["waveform"] = to_waveform(output["mel"], vocoder, denoiser)
 

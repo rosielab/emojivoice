@@ -99,6 +99,21 @@ emoji_mapping = {
     '🤔' : 17
 }
 
+#male voice mapping
+#emoji_mapping = {
+#    '😍' : 4,
+#    '😡' : 5,
+#    '😎' : 6,
+#    '😭' : 13,
+#    '🙄' : 16,
+#    '😁' : 26,
+#    '🙂' : 30,
+#    '🤣' : 38,
+#    '😮' : 60,
+#    '😅' : 82,
+#    '🤔' : 97
+#}
+
 ########################################################################################################################
 
 def get_llm(temperature):
@@ -175,6 +190,7 @@ def play_only_synthesis(device, model, vocoder, denoiser, text, spk):
         temperature=TTS_TEMPERATURE,
         spks=spk,
         length_scale=SPEAKING_RATE,
+        #clarity = False
     )
     waveform = to_waveform(output["mel"], vocoder, denoiser)
     sd.play(waveform, 22050)

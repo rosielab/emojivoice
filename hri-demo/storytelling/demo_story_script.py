@@ -18,7 +18,7 @@ import emoji
 VOICE = 'emoji'
 SCRIPT_PATH = "fairytale_script.txt"
 WAV_PATH = "outputs"
-CLARITY = False
+#CLARITY = False
 ############################ TTS PARAMETERS ############################################################################
 if VOICE == 'base' :
     TTS_MODEL_PATH = "../../Matcha-TTS/matcha_vctk.ckpt"
@@ -50,6 +50,20 @@ emoji_mapping = {
     '😅' : 22,
     '🤔' : 17
 }
+#male voice mapping
+#emoji_mapping = {
+#    '😍' : 4,
+#    '😡' : 5,
+#    '😎' : 6,
+#    '😭' : 13,
+#    '🙄' : 16,
+#    '😁' : 26,
+#    '🙂' : 30,
+#    '🤣' : 38,
+#    '😮' : 60,
+#    '😅' : 82,
+#    '🤔' : 97
+#}
 
 ########################################################################################################################
 
@@ -113,7 +127,7 @@ def play_only_synthesis(i, device, model, vocoder, denoiser, text, spk):
         temperature=TTS_TEMPERATURE,
         spks=spk,
         length_scale=SPEAKING_RATE,
-        clarity = CLARITY,
+        #clarity = CLARITY,
     )
     output["waveform"] = to_waveform(output["mel"], vocoder, denoiser)
 

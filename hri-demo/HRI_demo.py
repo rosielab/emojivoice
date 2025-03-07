@@ -11,9 +11,8 @@ import pyaudio
 import wave
 
 demo = "storytelling" # Replace with the name of the demo you want to run
-pepper_ip = "10.0.0.4"  # Replace with Pepper's IP address
-script = "storytelling/fairytale_script.txt" # Replace with the name of the script file
-
+pepper_ip = "10.39.134.231"  # Replace with Pepper's IP address
+script = "/home/paige/Documents/do_you_feel_me/hri-demo/storytelling/fairytale_script.txt" # Replace with the name of the script file
 storytelling_output_path = demo + "/outputs/"
 storybuilding_output_path = demo + "/outputs/"
 
@@ -151,9 +150,16 @@ elif demo == "storytelling":
     print(f"Number of lines in script.txt: {num_lines}")
 
     for i in range(num_lines): 
-        wait_for_file_update(storytelling_output_path + "to_play-" + str(i) + ".wav", "storytelling")
-        print(f"Playing file {i}")
+        origin_file = storytelling_output_path + "to_play-" + str(i) + ".wav"
+        wait_for_file_update(origin_file, "storytelling")
         play_audio_file(pepper_ip, storytelling_output_path + 'to_play-' +  str(i), 'to_play-' +  str(i))
+    
+        try:
+            os.remove(origin_file)
+            os.remove(storytelling_output_path + "to_play-" + str(i) + "_16b.wav")
+            print(f"Deleted file: {origin_file}")
+        except Exception as e:
+            print(f"Failed to delete {origin_file}: {e}")
 
         #test code to play audio file on the computer
 
