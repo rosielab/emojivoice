@@ -98,16 +98,35 @@ your own voice
 
 Matcha TTS can be fine tuned for your own emojis within as little as 2 minutes of data per emoji.
 The new checkpoint can be trained directly from the base Matcha-tts checkpoint (see [README](/Matcha-TTS/README.md)
-for links) or from our provided checkpoint.
-
-When fine tuning you will be overwriting the current voices, in general, we have produced better quality voices when
-selecting a voice to overwrite that is more similar to the target voice, e.g. same accent and gender.
-
-Follow the information in [README](/Matcha-TTS/README.md) for fine tuning on the *vctk* checkpoint where each speaker
-is an emoji. You may see our data
-[here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing) as an example.
+for links) or from our provided checkpoints.
 
 You can use our script [record_audio.py](/Matcha-TTS/record_audio.py) to easily record your data and
 [get_duration.ipynb](/Matcha-TTS/get_duration.ipynb) to check the duration of all of your recordings.
 
 To record audio create a `<emoji_name>.txt` where each line is a script to read, then set the emoji and emoji name (file name), with the `EMOJI_MAPPING` parameter in `record_audio.py`
+
+When fine tuning you will be overwriting the current voices, in general, we have produced better quality voices when
+selecting a voice to overwrite that is more similar to the target voice, e.g. same accent and gender. To easily hear all the voices
+along with their speaker numbers use this [hugging face space](https://huggingface.co/spaces/shivammehta25/Matcha-TTS).
+
+Follow the information in [README](/Matcha-TTS/README.md) for fine tuning on the *vctk* checkpoint where each speaker number is an emoji number. You may see our data
+and transcription set up in `emojis-hri-clean.zip` 
+[here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing) as an example.
+
+Hints: for fine tuning
+
+First create your own experiment and data configs following the [examples](https://github.com/rosielab/emojivoice/tree/main/Matcha-TTS/configs) mapping to your trascription
+file location.
+
+Then follow the orginal Matcha-TTS instructions
+
+To train from a checkpoint run:
+```bash
+python matcha/train.py experiment=<YOUR EXPERIMENT> ckpt_path=<PATH TO CHECKPOINT>
+```
+To run multi-speaker synthesis:
+
+```bash
+matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT> --spk <SPEAKER NUMBER> --vocoder hifigan_univ_v1 --speaking_rate <SPEECH RATE>
+```
+
