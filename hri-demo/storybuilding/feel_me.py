@@ -31,7 +31,6 @@ import sounddevice as sd
 
 #######################################################################################################################
 VOICE = 'emoji'
-#CLARITY = False
 WAV_PATH = "./outputs"
 TTS_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 ############################### ASR PARAMETERS #########################################################################
@@ -198,7 +197,6 @@ def play_only_synthesis(device, model, vocoder, denoiser, text, spk):
         temperature=TTS_TEMPERATURE,
         spks=spk,
         length_scale=SPEAKING_RATE,
-        #clarity = CLARITY,
     )
     output["waveform"] = to_waveform(output["mel"], vocoder, denoiser)
 

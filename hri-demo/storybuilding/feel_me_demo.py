@@ -84,7 +84,6 @@ if __name__ == "__main__":
     import sounddevice as sd
 
     VOICE = 'emoji'
-    #CLARITY = False
     WAV_PATH = "./outputs"
     TTS_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     SRT_PATH = "output.srt"
@@ -233,7 +232,6 @@ if __name__ == "__main__":
             temperature=TTS_TEMPERATURE,
             spks=spk,
             length_scale=SPEAKING_RATE,
-            #clarity = CLARITY,
         )
         output["waveform"] = to_waveform(output["mel"], vocoder, denoiser)
 
