@@ -116,7 +116,10 @@ and transcription set up in `emojis-hri-clean.zip`
 Hints: for fine tuning
 
 First create your own experiment and data configs following the [examples](https://github.com/rosielab/emojivoice/tree/main/Matcha-TTS/configs) mapping to your trascription
-file location.
+file location. The two primary configs to create (and check out the paths to the data) are one in [data](https://github.com/rosielab/emojivoice/blob/main/Matcha-TTS/configs/data/emoji_multi.yaml) and
+one in [experiments](https://github.com/rosielab/emojivoice/blob/main/Matcha-TTS/configs/experiment/emoji_multi.yaml). The paths here should point to where your train and validation files are stored,
+and your train and validation files should point to your audio file locations. You can test that all these files are pointing the right way before training when you run: `matcha-data-stats -i ljspeech.yaml`
+as per the matcha repo training steps.
 
 Then follow the orginal Matcha-TTS instructions
 
@@ -124,9 +127,15 @@ To train from a checkpoint run:
 ```bash
 python matcha/train.py experiment=<YOUR EXPERIMENT> ckpt_path=<PATH TO CHECKPOINT>
 ```
+
+You can train off of the matcha base release checkpoints or the emojivoice checkpoints.
+
 To run multi-speaker synthesis:
 
 ```bash
 matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT> --spk <SPEAKER NUMBER> --vocoder hifigan_univ_v1 --speaking_rate <SPEECH RATE>
 ```
+
+If you are having issues, sometimes cuda will make the error messages convoluted, run training in [cpu](https://github.com/shivammehta25/Matcha-TTS/blob/main/configs/trainer/default.yaml)(set accelerator to cpu and remove devices)
+mode to get more clear error outputs.
 
