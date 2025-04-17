@@ -102,6 +102,7 @@ for links) or from our provided checkpoints.
 
 You can use our script [record_audio.py](/Matcha-TTS/record_audio.py) to easily record your data and
 [get_duration.ipynb](/Matcha-TTS/get_duration.ipynb) to check the duration of all of your recordings.
+If fine tuning from a checkpoint the sampling rate for the audio files must be 22050.
 
 To record audio create a `<emoji_name>.txt` where each line is a script to read, then set the emoji and emoji name (file name), with the `EMOJI_MAPPING` parameter in `record_audio.py`
 
