@@ -88,7 +88,7 @@ It is possible to customize the pipeline. You can perform the following modifica
 
 All of these changes can be found at the top of the [feel_me.py](feel_me.py)
 
-Currently the system contains 11 emoji voices: 😎🤔😍🤣🙂😮🙄😅🥲😭😡😁
+Currently the system contains 11 emoji voices: 😎🤔😍🤣🙂😮🙄😅😭😡😁
 If you wish to change the personality of the chatbot or the emojis used by the chatbot edit the `PROMPT` parameter
 
 If you wish to use a different voice or add new emojis you can quickly and easily fine tune Matcha-TTS to create
