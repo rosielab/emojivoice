@@ -2,6 +2,13 @@
 
 An expressive pseudo Speech-to-Speech system 🗣️ for HRI experiments 🤖, a part of *Do You Feel Me?*
 
+## Coming soon
+Multilingual baseline checkpoints to finetune your EmojiVoice
+
+* French
+* German
+* Japanese - with phonemizer update for all Japnese alphabets
+
 ## Structure
 
 The system is structured as follows:
