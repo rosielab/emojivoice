@@ -73,13 +73,13 @@ Note this repo has been tested with python 3.11.9
 pip install requirements.txt
 ```
 
-#### Example implementations
+### Example implementations
 
 Example implementations for case studies can be found in [case_studies](https://github.com/rosielab/emojivoice/tree/main/case_studies)
 
 Example implementations with Pepper robot can be found in [hri-demo](https://github.com/rosielab/emojivoice/tree/main/hri-demo)
 
-#### Speech-to-Speech system:
+### Speech-to-Speech system:
 
 You will need to pull the llama 3 model
 
