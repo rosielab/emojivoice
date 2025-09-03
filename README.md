@@ -151,6 +151,10 @@ Follow the information in [README](/Matcha-TTS/README.md) for fine tuning on the
 and transcription set up in `emojis-hri-clean.zip` 
 [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing) as an example.
 
+#### With the multilingual update we have trained a cleaner and more robust English baseline we suggest fine tuning off of `english-emoji-base.ckpt`
+
+We provide other base voices for other languages, however, we do not guarantee how successfully they can be fine tuned
+
 *FOR MULTILINGUAL FINE TUNING THE CLEANERS MUST BE SET IN THE CONFIGS* see your corresponding cleaner in [cleaners](https://github.com/rosielab/emojivoice/blob/main/Matcha-TTS/matcha/text/cleaners.py))
 
 #### Hints: for fine tuning
