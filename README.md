@@ -1,6 +1,8 @@
-# EmojiVoice 🎉
+# EmojiVoice 🎉 Towards long-term controllable expressivity in robot speech
 
 An expressive pseudo Speech-to-Speech system 🗣️ for HRI experiments 🤖, a part of *Do You Feel Me?*
+
+### [Paige Tuttösí](https://chocobearz.github.io/), [Shivam Mehta](https://www.kth.se/profile/smehta), Zachary Syvenky, Bermet Burkanova, [Gustav Eje Henter](https://people.kth.se/~ghe/), and [Angelica Lim](https://www.rosielab.ca/)
 
 > This is the official code implementation of EmojiVoice for [RO-MAN 2025].
 
