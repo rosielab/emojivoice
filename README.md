@@ -62,6 +62,11 @@ git clone git@github.com:rosielab/do_you_feel_me.git
 
 Create conda environment or virtualenv and install the requirements
 
+```
+conda create -n emojivoice python=3.11 -y
+conda activate emojivoice
+```
+
 Note this repo has been tested with python 3.11.9
 
 ```
@@ -165,3 +170,68 @@ matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT> --spk <S
 If you are having issues, sometimes cuda will make the error messages convoluted, run training in [cpu](https://github.com/shivammehta25/Matcha-TTS/blob/main/configs/trainer/default.yaml)(set accelerator to cpu and remove devices)
 mode to get more clear error outputs.
 
+### Command line synthesis
+
+## Installation
+
+1. Create an environment (suggested but optional)
+
+```
+conda create -n emojivoice python=3.11 -y
+conda activate emojivoice
+```
+
+2. Install Matcha TTS from source
+
+```bash
+cd emojivoice
+pip install -e .
+```
+
+3. Run CLI
+
+We have added a play only option, which is used in the emojivoice experiment set ups. Here the audio is played and no .wav file is saved
+
+```bash
+matcha-tts --text "<INPUT TEXT>" --play
+```
+
+To save the audio file
+
+```bash
+matcha-tts --text "<INPUT TEXT>"
+```
+
+### CLI Arguments
+
+- To synthesise from a file, run:
+
+```bash
+matcha-tts --file <PATH TO FILE> --play
+```
+
+- To batch synthesise from a file, run:
+
+```bash
+matcha-tts --file <PATH TO FILE> --batched --play
+```
+
+Additional arguments
+
+- Speaking rate
+
+```bash
+matcha-tts --text "<INPUT TEXT>" --speaking_rate 1.0 --play
+```
+
+- Sampling temperature
+
+```bash
+matcha-tts --text "<INPUT TEXT>" --temperature 0.667 --play
+```
+
+- Euler ODE solver steps
+
+```bash
+matcha-tts --text "<INPUT TEXT>" --steps 10 --play
+```
