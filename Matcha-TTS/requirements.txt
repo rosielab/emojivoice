@@ -50,3 +50,5 @@ fugashi
 jaconv
 mojimoji
 unidic-lite
+pyopenjtalk
+misaki
