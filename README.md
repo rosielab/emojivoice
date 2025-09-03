@@ -2,6 +2,20 @@
 
 An expressive pseudo Speech-to-Speech system 🗣️ for HRI experiments 🤖, a part of *Do You Feel Me?*
 
+> This is the official code implementation of EmojiVoice for [RO-MAN 2025].
+
+We have created a wrapper for [Matcha-TTS](https://github.com/shivammehta25/Matcha-TTS) to aid HRI researchers in training custom light-weight, expressive voices
+
+We have added:
+* Training files setup: examples, raw data, and 3 checkpoints (with and without optimizers)
+* Additional information on the amount of data needed to fine-tune
+* Scripts to record the data
+* Wrappers to parse emojis in text to prompt the voices in generation time
+* A conversational agent chaining ASR -> LLM -> EmojiVoice
+
+Read the paper [here](https://arxiv.org/abs/2506.15085)
+See our demo page [here](https://rosielab.github.io/emojivoice/)
+
 ## Coming soon
 Multilingual baseline checkpoints to finetune your EmojiVoice
 
@@ -122,6 +136,8 @@ and transcription set up in `emojis-hri-clean.zip`
 [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing) as an example.
 
 Hints: for fine tuning
+
+You want to have very clean, high quality audio for the best results
 
 First create your own experiment and data configs following the [examples](https://github.com/rosielab/emojivoice/tree/main/Matcha-TTS/configs) mapping to your trascription
 file location. The two primary configs to create (and check out the paths to the data) are one in [data](https://github.com/rosielab/emojivoice/blob/main/Matcha-TTS/configs/data/emoji_multi.yaml) and
