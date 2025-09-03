@@ -73,7 +73,13 @@ Note this repo has been tested with python 3.11.9
 pip install requirements.txt
 ```
 
-Speech-to-Speech system:
+#### Example implementations
+
+Example implementations for case studies can be found in [case_studies](https://github.com/rosielab/emojivoice/tree/main/case_studies)
+
+Example implementations with Pepper robot can be found in [hri-demo](https://github.com/rosielab/emojivoice/tree/main/hri-demo)
+
+#### Speech-to-Speech system:
 
 You will need to pull the llama 3 model
 
@@ -92,7 +98,7 @@ You will need espeak to run Matcha-tts
 ```
 sudo apt-get install espeak-ng
 ```
-
+conda create -n emojivoice python=3.11 -y
 Then run:
 
 ```
