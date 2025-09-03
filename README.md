@@ -14,6 +14,7 @@ We have added:
 * A conversational agent chaining ASR -> LLM -> EmojiVoice
 
 Read the paper [here](https://arxiv.org/abs/2506.15085)
+
 See our demo page [here](https://rosielab.github.io/emojivoice/)
 
 ## Coming soon
@@ -60,6 +61,7 @@ git clone git@github.com:rosielab/do_you_feel_me.git
 ```
 
 Create conda environment or virtualenv and install the requirements
+
 Note this repo has been tested with python 3.11.9
 
 ```
@@ -135,7 +137,7 @@ Follow the information in [README](/Matcha-TTS/README.md) for fine tuning on the
 and transcription set up in `emojis-hri-clean.zip` 
 [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing) as an example.
 
-Hints: for fine tuning
+#### Hints: for fine tuning
 
 You want to have very clean, high quality audio for the best results
 
