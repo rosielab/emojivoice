@@ -1,3 +1,5 @@
+# --------- Matcha-TTS Local Setup ---------- #
+
 # --------- pytorch --------- #
 torch>=2.0.0
 torchvision>=0.15.0
@@ -26,7 +28,7 @@ phonemizer      # phonemization of text
 tensorboard
 librosa
 Cython
-numpy
+numpy<2
 einops
 inflect
 Unidecode
@@ -52,3 +54,38 @@ mojimoji
 unidic-lite
 pyopenjtalk
 misaki
+
+
+# ----------- Feel-me / emojivoice set up --------- #
+
+# --------- WHISPER LIVE --------- #
+
+PyAudio
+faster-whisper==1.0.1
+websockets
+onnxruntime==1.16.0
+ffmpeg-python
+websocket-client
+numba
+openai-whisper
+kaldialign
+soundfile
+jiwer
+evaluate
+
+# --------- MATCHA TTS --------- #
+
+emoji
+
+# --------- LLM --------- #
+
+langchain
+langchain-ollama
+langchain-community
+ollama
+
+#---------- Other --------- #
+
+wavio
+pynput
+pygame

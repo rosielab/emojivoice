@@ -50,6 +50,8 @@ We currently have 3 available emoji checkpoints:
 * Zach - Male
 
 Current checkpoints and data can be found [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing)
+We have left an empty folder (`Matcha-TTS/models`) where we suggest storing them and where they must be stored to 
+directly run our case-studies
 
 Too see per model (WhisperLive and Matcha-TTS) information and make edits within the pipeline see internal READMEs in
 the respective folders
@@ -84,7 +86,9 @@ Example implementations with Pepper robot can be found in [hri-demo](https://git
 
 ### Speech-to-Speech system:
 
-You will need to pull the llama 3 model
+You will need to pull the llama 3 model - This model is best for English may need to change for other languages or use cases
+
+*If you are using Japanese it seems that this model is not very good at Japanese and we suggest trying another*
 
 ```
 curl -fsSL https://ollama.com/install.sh | sh
@@ -101,7 +105,13 @@ You will need espeak to run Matcha-tts
 ```
 sudo apt-get install espeak-ng
 ```
-conda create -n emojivoice python=3.11 -y
+
+You will find the code for the conversational agent in `feel_me.py`
+
+At the top you will find many possible customizations (see below) but also some variables to be set to your environment.
+Specifically the path to your model checkpoints, the language (the whisper model will also need to be changed), and the 
+emoji to speaker mapping this is under `TTS PARAMETERS`.
+
 Then run:
 
 ```
