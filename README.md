@@ -19,12 +19,16 @@ Read the paper [here](https://arxiv.org/abs/2506.15085)
 
 See our demo page [here](https://rosielab.github.io/emojivoice/)
 
-## Coming soon
-Multilingual baseline checkpoints to finetune your EmojiVoice
-
+## v1.0.0 updates
+Emojivoice is now supports multilingual for
 * French
 * German
-* Japanese - with phonemizer update for all Japnese alphabets
+* Japanese - with an updated phonemizer
+
+## Coming soon
+Your updates! Please reach out and make PRs for any issues or needed updates
+
+Also contact if you are interested in different languages
 
 ## Structure
 
@@ -50,6 +54,8 @@ We currently have 3 available emoji checkpoints:
 * Zach - Male
 
 Current checkpoints and data can be found [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing)
+We have left an empty folder (`Matcha-TTS/models`) where we suggest storing them and where they must be stored to
+directly run our case-studies
 
 Too see per model (WhisperLive and Matcha-TTS) information and make edits within the pipeline see internal READMEs in
 the respective folders
@@ -72,7 +78,8 @@ conda activate emojivoice
 Note this repo has been tested with python 3.11.9
 
 ```
-pip install requirements.txt
+cd emojivoice/Matcha-TTS
+pip install -e .
 ```
 
 ### Example implementations
@@ -83,7 +90,9 @@ Example implementations with Pepper robot can be found in [hri-demo](https://git
 
 ### Speech-to-Speech system:
 
-You will need to pull the llama 3 model
+You will need to pull the llama 3 model - This model is best for English may need to change for other languages or use cases
+
+*If you are using Japanese it seems that this model is not very good at Japanese and we suggest trying another*
 
 ```
 curl -fsSL https://ollama.com/install.sh | sh
@@ -100,7 +109,13 @@ You will need espeak to run Matcha-tts
 ```
 sudo apt-get install espeak-ng
 ```
-conda create -n emojivoice python=3.11 -y
+
+You will find the code for the conversational agent in `feel_me.py`
+
+At the top you will find many possible customizations (see below) but also some variables to be set to your environment.
+Specifically the path to your model checkpoints, the language (the whisper model will also need to be changed), and the 
+emoji to speaker mapping this is under `TTS PARAMETERS`.
+
 Then run:
 
 ```
@@ -150,6 +165,12 @@ Follow the information in [README](/Matcha-TTS/README.md) for fine tuning on the
 and transcription set up in `emojis-hri-clean.zip` 
 [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing) as an example.
 
+#### With the multilingual update we have trained a cleaner and more robust English baseline we suggest fine tuning off of `english-emoji-base.ckpt`
+
+We provide other base voices for other languages, however, we do not guarantee how successfully they can be fine tuned
+
+*FOR MULTILINGUAL FINE TUNING THE CLEANERS MUST BE SET IN THE CONFIGS* see your corresponding cleaner in [cleaners](https://github.com/rosielab/emojivoice/blob/main/Matcha-TTS/matcha/text/cleaners.py))
+
 #### Hints: for fine tuning
 
 You want to have very clean, high quality audio for the best results
@@ -192,7 +213,7 @@ conda activate emojivoice
 2. Install Matcha TTS from source
 
 ```bash
-cd emojivoice
+cd emojivoice/Matcha-TTS
 pip install -e .
 ```
 
@@ -200,14 +221,21 @@ pip install -e .
 
 We have added a play only option, which is used in the emojivoice experiment set ups. Here the audio is played and no .wav file is saved
 
+*The default language is English, please ensure you provide the correct language to match your checkpoint*
+
 ```bash
-matcha-tts --text "<INPUT TEXT>" --play
+matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT> --play
+```
+
+Language other than English
+```bash
+matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT> --play --language fr
 ```
 
 To save the audio file
 
 ```bash
-matcha-tts --text "<INPUT TEXT>"
+matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT>
 ```
 
 ### CLI Arguments
@@ -215,13 +243,13 @@ matcha-tts --text "<INPUT TEXT>"
 - To synthesise from a file, run:
 
 ```bash
-matcha-tts --file <PATH TO FILE> --play
+matcha-tts --file <PATH TO FILE> --checkpoint_path <PATH TO CHECKPOINT> --play 
 ```
 
 - To batch synthesise from a file, run:
 
 ```bash
-matcha-tts --file <PATH TO FILE> --batched --play
+matcha-tts --file <PATH TO FILE> --checkpoint_path <PATH TO CHECKPOINT> --batched --play
 ```
 
 Additional arguments
@@ -229,17 +257,17 @@ Additional arguments
 - Speaking rate
 
 ```bash
-matcha-tts --text "<INPUT TEXT>" --speaking_rate 1.0 --play
+matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT> --speaking_rate 1.0 --play
 ```
 
 - Sampling temperature
 
 ```bash
-matcha-tts --text "<INPUT TEXT>" --temperature 0.667 --play
+matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT> --temperature 0.667 --play
 ```
 
 - Euler ODE solver steps
 
 ```bash
-matcha-tts --text "<INPUT TEXT>" --steps 10 --play
+matcha-tts --text "<INPUT TEXT>" --checkpoint_path <PATH TO CHECKPOINT> --steps 10 --play
 ```

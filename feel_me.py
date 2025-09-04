@@ -9,6 +9,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 
 import torch
+import sys
 import sounddevice as sd
 
 from matcha.hifigan.config import v1
@@ -27,11 +28,9 @@ from pynput import keyboard
 
 import whisper
 
-#######################################################################################################################
-
-VOICE = 'emoji'
 TTS_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 ############################### ASR PARAMETERS #########################################################################
+
 SRT_PATH = "output.srt"
 ASR_MODEL = "tiny.en"
 
@@ -68,14 +67,11 @@ PROMPT = """
 LLM_TEMPERATURE = 0.6
 
 ############################ TTS PARAMETERS ############################################################################
-if VOICE == 'base' :
-    TTS_MODEL_PATH = "./Matcha-TTS/matcha_vctk.ckpt"
-    SPEAKING_RATE = 0.8
-    STEPS = 10
-else:
-    TTS_MODEL_PATH = "./Matcha-TTS/emoji-hri-paige.ckpt"
-    SPEAKING_RATE = 0.8
-    STEPS = 10
+TTS_MODEL_PATH = "./Matcha-TTS/models/emoji-hri-paige-inference.ckpt"
+SPEAKING_RATE = 0.8
+STEPS = 10
+LANGUAGE = "en"
+
 # hifigan_univ_v1 is suggested, unless the custom model is trained on LJ Speech
 VOCODER_NAME= "hifigan_univ_v1"
 TTS_TEMPERATURE = 0.667
@@ -135,9 +131,20 @@ def get_chat_prompt_template(prompt):
         ],
     )
 
-def process_text(i: int, text: str, device: torch.device, play):
+def process_text(text: str, device: torch.device, language: str):
+    cleaners = {
+        "en": "english_cleaners2",
+        "fr": "french_cleaners",
+        "ja": "japanese_cleaners",
+        "es": "spanish_cleaners",
+        "de": "german_cleaners",
+    }
+    if language not in cleaners:
+        print("Invalid language. Current supported languages: en (English), fr (French), ja (Japanese), de (German).")
+        sys.exit(1)
+
     x = torch.tensor(
-        intersperse(text_to_sequence(text, ["english_cleaners2"])[0], 0),
+        intersperse(text_to_sequence(text, [cleaners[language]])[0], 0),
         dtype=torch.long,
         device=device,
     )[None]
@@ -181,7 +188,7 @@ def to_waveform(mel, vocoder, denoiser=None):
 
 def play_only_synthesis(device, model, vocoder, denoiser, text, spk):
     text = text.strip()
-    text_processed = process_text(0, text, device, True)
+    text_processed = process_text(text, device, LANGUAGE)
 
     output = model.synthesise(
         text_processed["x"],
@@ -294,16 +301,11 @@ if __name__ == "__main__":
                 if emoji.is_emoji(char):
                     emoji_list.append(char)
             # incase the last emoji is not in the emoji list
-            if VOICE == 'base':
-                spk = torch.tensor([1], device=tts_device, dtype=torch.long)
-            if VOICE == 'default':
-                spk = torch.tensor([7], device=tts_device, dtype=torch.long)
-            if VOICE == 'emoji':
-                spk = torch.tensor([7], device=tts_device, dtype=torch.long)
-                for emote in emoji_list:
-                    if emote in emoji_mapping:
-                        spk = torch.tensor([emoji_mapping[emote]], device=tts_device, dtype=torch.long)
-                        break
+            spk = torch.tensor([0], device=tts_device, dtype=torch.long)
+            for emote in emoji_list:
+                if emote in emoji_mapping:
+                    spk = torch.tensor([emoji_mapping[emote]], device=tts_device, dtype=torch.long)
+                    break
             response = emoji.replace_emoji(response, '')
             #matcha cannot handle brackets
             response = response.replace(')', '')

@@ -36,6 +36,7 @@ import time
 #######################################################################################################################
 
 VOICE = 'emoji'
+LANGUAGE = "en"
 TTS_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 ############################### ASR PARAMETERS #########################################################################
 SRT_PATH = "output.srt"
@@ -77,11 +78,11 @@ LLM_TEMPERATURE = 0.6
 
 ############################ TTS PARAMETERS ############################################################################
 if VOICE == 'base' :
-    TTS_MODEL_PATH = "../../Matcha-TTS/matcha_vctk.ckpt"
+    TTS_MODEL_PATH = "../../Matcha-TTS/models/matcha_vctk.ckpt"
     SPEAKING_RATE = 0.8
     STEPS = 10
 else:
-    TTS_MODEL_PATH = "../../Matcha-TTS/emoji-hri-zach.ckpt"
+    TTS_MODEL_PATH = "../../Matcha-TTS/models/emoji-hri-zach.ckpt"
     SPEAKING_RATE = 0.8
     STEPS = 10
 # hifigan_univ_v1 is suggested, unless the custom model is trained on LJ Speech
@@ -142,9 +143,20 @@ def get_chat_prompt_template(prompt):
         ],
     )
 
-def process_text(i: int, text: str, device: torch.device, play):
+def process_text(text: str, device: torch.device, language: str):
+    cleaners = {
+        "en": "english_cleaners2",
+        "fr": "french_cleaners",
+        "ja": "japanese_cleaners",
+        "es": "spanish_cleaners",
+        "de": "german_cleaners",
+    }
+    if language not in cleaners:
+        print("Invalid language. Current supported languages: en (English), fr (French), ja (Japanese), de (German).")
+        sys.exit(1)
+
     x = torch.tensor(
-        intersperse(text_to_sequence(text, ["english_cleaners2"])[0], 0),
+        intersperse(text_to_sequence(text, [cleaners[language]])[0], 0),
         dtype=torch.long,
         device=device,
     )[None]
@@ -188,7 +200,7 @@ def to_waveform(mel, vocoder, denoiser=None):
 
 def play_only_synthesis(device, model, vocoder, denoiser, text, spk):
     text = text.strip()
-    text_processed = process_text(0, text, device, True)
+    text_processed = process_text(0, text, device, LANGUAGE)
 
     output = model.synthesise(
         text_processed["x"],

@@ -3,6 +3,7 @@ import datetime as dt
 import os
 import warnings
 from pathlib import Path
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,21 +19,10 @@ from matcha.models.matcha_tts import MatchaTTS
 from matcha.text import sequence_to_text, text_to_sequence
 from matcha.utils.utils import assert_model_downloaded, get_user_data_dir, intersperse
 
-MATCHA_URLS = {
-    "matcha_ljspeech": "https://github.com/shivammehta25/Matcha-TTS-checkpoints/releases/download/v1.0/matcha_ljspeech.ckpt",
-    "matcha_vctk": "https://github.com/shivammehta25/Matcha-TTS-checkpoints/releases/download/v1.0/matcha_vctk.ckpt",
-}
-
 VOCODER_URLS = {
     "hifigan_T2_v1": "https://github.com/shivammehta25/Matcha-TTS-checkpoints/releases/download/v1.0/generator_v1",  # Old url: https://drive.google.com/file/d/14NENd4equCBLyyCSke114Mv6YR_j_uFs/view?usp=drive_link
     "hifigan_univ_v1": "https://github.com/shivammehta25/Matcha-TTS-checkpoints/releases/download/v1.0/g_02500000",  # Old url: https://drive.google.com/file/d/1qpgI41wNXFcH-iKq1Y42JlBC9j0je8PW/view?usp=drive_link
 }
-
-MULTISPEAKER_MODEL = {
-    "matcha_vctk": {"vocoder": "hifigan_univ_v1", "speaking_rate": 0.85, "spk": 0, "spk_range": (0, 107)}
-}
-
-SINGLESPEAKER_MODEL = {"matcha_ljspeech": {"vocoder": "hifigan_T2_v1", "speaking_rate": 0.95, "spk": None}}
 
 
 def plot_spectrogram_to_numpy(spectrogram, filename):
@@ -45,17 +35,29 @@ def plot_spectrogram_to_numpy(spectrogram, filename):
     fig.canvas.draw()
     plt.savefig(filename)
 
+def process_text(i: int, text: str, device: torch.device, language: str, play: bool):
+    cleaners = {
+        "en": "english_cleaners2",
+        "fr": "french_cleaners",
+        "ja": "japanese_cleaners",
+        "es": "spanish_cleaners",
+        "de": "german_cleaners",
+    }
+    if language not in cleaners:
+        print("Invalid language. Current supported languages: en (English), fr (French), ja (Japanese), de (German).")
+        sys.exit(1)
 
-def process_text(i: int, text: str, device: torch.device, play):
     if not play:
         print(f"[{i}] - Input text: {text}")
+
     x = torch.tensor(
-        intersperse(text_to_sequence(text, ["english_cleaners2"])[0], 0),
+        intersperse(text_to_sequence(text, [cleaners[language]])[0], 0),
         dtype=torch.long,
         device=device,
     )[None]
     x_lengths = torch.tensor([x.shape[-1]], dtype=torch.long, device=device)
     x_phones = sequence_to_text(x.squeeze(0).tolist())
+
     if not play:
         print(f"[{i}] - Phonetised text: {x_phones[1::2]}")
 
@@ -73,12 +75,7 @@ def get_texts(args):
 
 def assert_required_models_available(args):
     save_dir = get_user_data_dir()
-    if not hasattr(args, "checkpoint_path") and args.checkpoint_path is None:
-        model_path = args.checkpoint_path
-    else:
-        model_path = save_dir / f"{args.model}.ckpt"
-        assert_model_downloaded(model_path, MATCHA_URLS[args.model])
-
+    model_path = args.checkpoint_path
     vocoder_path = save_dir / f"{args.vocoder}"
     assert_model_downloaded(vocoder_path, VOCODER_URLS[args.vocoder])
     return {"matcha": model_path, "vocoder": vocoder_path}
@@ -141,24 +138,18 @@ def save_to_folder(filename: str, output: dict, folder: str):
 def validate_args(args):
     assert (
         args.text or args.file
-    ), "Either text or file must be provided Matcha-T(ea)TTS need sometext to whisk the waveforms."
+    ), "Either text or file must be provided Matcha-T(ea)TTS need some text to whisk the waveforms."
     assert args.temperature >= 0, "Sampling temperature cannot be negative"
     assert args.steps > 0, "Number of ODE steps must be greater than 0"
 
-    if args.checkpoint_path is None:
-        # When using pretrained models
-        if args.model in SINGLESPEAKER_MODEL:
-            args = validate_args_for_single_speaker_model(args)
-
-        if args.model in MULTISPEAKER_MODEL:
-            args = validate_args_for_multispeaker_model(args)
+    if args.vocoder == "hifigan_T2_v1":
+        warn_ = "[-] I would suggest passing --vocoder hifigan_univ_v1, unless the custom model is trained on LJ Speech."
+        warnings.warn(warn_, UserWarning)
     else:
-        # When using a custom model
-        if args.vocoder != "hifigan_univ_v1":
-            warn_ = "[-] Using custom model checkpoint! I would suggest passing --vocoder hifigan_univ_v1, unless the custom model is trained on LJ Speech."
-            warnings.warn(warn_, UserWarning)
-        if args.speaking_rate is None:
-            args.speaking_rate = 1.0
+        args.vocoder = "hifigan_univ_v1"
+
+    if args.speaking_rate is None:
+        args.speaking_rate = 1.0
 
     if args.batched:
         assert args.batch_size > 0, "Batch size must be greater than 0"
@@ -166,69 +157,17 @@ def validate_args(args):
 
     return args
 
-
-def validate_args_for_multispeaker_model(args):
-    if args.vocoder is not None:
-        if args.vocoder != MULTISPEAKER_MODEL[args.model]["vocoder"]:
-            warn_ = f"[-] Using {args.model} model! I would suggest passing --vocoder {MULTISPEAKER_MODEL[args.model]['vocoder']}"
-            warnings.warn(warn_, UserWarning)
-    else:
-        args.vocoder = MULTISPEAKER_MODEL[args.model]["vocoder"]
-
-    if args.speaking_rate is None:
-        args.speaking_rate = MULTISPEAKER_MODEL[args.model]["speaking_rate"]
-
-    spk_range = MULTISPEAKER_MODEL[args.model]["spk_range"]
-    if args.spk is not None:
-        assert (
-            args.spk >= spk_range[0] and args.spk <= spk_range[-1]
-        ), f"Speaker ID must be between {spk_range} for this model."
-    else:
-        available_spk_id = MULTISPEAKER_MODEL[args.model]["spk"]
-        warn_ = f"[!] Speaker ID not provided! Using speaker ID {available_spk_id}"
-        warnings.warn(warn_, UserWarning)
-        args.spk = available_spk_id
-
-    return args
-
-
-def validate_args_for_single_speaker_model(args):
-    if args.vocoder is not None:
-        if args.vocoder != SINGLESPEAKER_MODEL[args.model]["vocoder"]:
-            warn_ = f"[-] Using {args.model} model! I would suggest passing --vocoder {SINGLESPEAKER_MODEL[args.model]['vocoder']}"
-            warnings.warn(warn_, UserWarning)
-    else:
-        args.vocoder = SINGLESPEAKER_MODEL[args.model]["vocoder"]
-
-    if args.speaking_rate is None:
-        args.speaking_rate = SINGLESPEAKER_MODEL[args.model]["speaking_rate"]
-
-    if args.spk != SINGLESPEAKER_MODEL[args.model]["spk"]:
-        warn_ = f"[-] Ignoring speaker id {args.spk} for {args.model}"
-        warnings.warn(warn_, UserWarning)
-        args.spk = SINGLESPEAKER_MODEL[args.model]["spk"]
-
-    return args
-
-
 @torch.inference_mode()
 def cli():
     parser = argparse.ArgumentParser(
         description=" 🍵 Matcha-TTS: A fast TTS architecture with conditional flow matching"
     )
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="matcha_ljspeech",
-        help="Model to use",
-        choices=MATCHA_URLS.keys(),
-    )
 
     parser.add_argument(
         "--checkpoint_path",
         type=str,
-        default=None,
         help="Path to the custom model checkpoint",
+        required=True
     )
 
     parser.add_argument(
@@ -239,13 +178,14 @@ def cli():
         choices=VOCODER_URLS.keys(),
     )
     parser.add_argument("--play", action='store_true', help="Play the synthesized text without saving")
+    parser.add_argument("--language", type=str, default="en", help="Synthesis language: English default")
     parser.add_argument("--text", type=str, default=None, help="Text to synthesize")
     parser.add_argument("--file", type=str, default=None, help="Text file to synthesize")
     parser.add_argument("--spk", type=int, default=None, help="Speaker ID")
     parser.add_argument(
         "--temperature",
         type=float,
-        default=0.667, # 0.667
+        default=0.667,
         help="Variance of the x0 noise (default: 0.667)",
     )
     parser.add_argument(
@@ -259,7 +199,7 @@ def cli():
     parser.add_argument(
         "--denoiser_strength",
         type=float,
-        default= 0.00025, # 0.00005 0.00025
+        default= 0.00025,
         help="Strength of the vocoder bias denoiser (default: 0.00025)",
     )
     parser.add_argument(
@@ -278,6 +218,7 @@ def cli():
     play = args.play
     args = validate_args(args)
     device = get_device(args, play)
+    language = args.language
     if not play:
         print_config(args)
     paths = assert_required_models_available(args)
@@ -292,16 +233,21 @@ def cli():
 
     texts = get_texts(args)
 
-    spk = torch.tensor([args.spk], device=device, dtype=torch.long) if args.spk is not None else None
+    if args.spk != None:
+        spk = torch.tensor([args.spk], device=device, dtype=torch.long)
+    else:
+        warn_ = "[-] No speaker provided, using speaker number 0."
+        warnings.warn(warn_, UserWarning)
+        spk = torch.tensor([0], device=device, dtype=torch.long)
     if args.play:
         if not args.file:
-            play_only_synthesis(args, device, model, vocoder, denoiser, texts, spk)
+            play_only_synthesis(args, device, model, vocoder, denoiser, texts, spk, language)
         else:
-            file_synthesis_play_only(args, device, model, vocoder, denoiser, texts, spk)
+            file_synthesis_play_only(args, device, model, vocoder, denoiser, texts, spk, language)
     elif len(texts) == 1 or not args.batched:
-        unbatched_synthesis(args, device, model, vocoder, denoiser, texts, spk)
+        unbatched_synthesis(args, device, model, vocoder, denoiser, texts, spk, language)
     else:
-        batched_synthesis(args, device, model, vocoder, denoiser, texts, spk)
+        batched_synthesis(args, device, model, vocoder, denoiser, texts, spk, language)
 
 
 class BatchedSynthesisDataset(torch.utils.data.Dataset):
@@ -328,10 +274,10 @@ def batched_collate_fn(batch):
     return {"x": x, "x_lengths": x_lengths}
 
 
-def batched_synthesis(args, device, model, vocoder, denoiser, texts, spk):
+def batched_synthesis(args, device, model, vocoder, denoiser, texts, spk, language):
     total_rtf = []
     total_rtf_w = []
-    processed_text = [process_text(i, text, "cpu", None) for i, text in enumerate(texts)]
+    processed_text = [process_text(i, text, "cpu", language, None) for i, text in enumerate(texts)]
     dataloader = torch.utils.data.DataLoader(
         BatchedSynthesisDataset(processed_text),
         batch_size=args.batch_size,
@@ -370,7 +316,7 @@ def batched_synthesis(args, device, model, vocoder, denoiser, texts, spk):
     print(f"[🍵] Average Matcha-TTS + VOCODER RTF: {np.mean(total_rtf_w):.4f} ± {np.std(total_rtf_w)}")
     print("[🍵] Enjoy the freshly whisked 🍵 Matcha-TTS!")
 
-def file_synthesis_play_only(args, device, model, vocoder, denoiser, texts, spk):
+def file_synthesis_play_only(args, device, model, vocoder, denoiser, texts, spk, language):
     i = 0
     print("Press enter to play each line 🍵")
     while i < len(texts):
@@ -382,7 +328,7 @@ def file_synthesis_play_only(args, device, model, vocoder, denoiser, texts, spk)
         text = text.strip()
         spk = int(split_txt[1])
         spk = torch.tensor([spk], device=device, dtype=torch.long)
-        text_processed = process_text(i, text, device, True)
+        text_processed = process_text(i, text, device, language, True)
 
         output = model.synthesise(
             text_processed["x"],
@@ -398,10 +344,10 @@ def file_synthesis_play_only(args, device, model, vocoder, denoiser, texts, spk)
 
         i = i + 1
 
-def play_only_synthesis(args, device, model, vocoder, denoiser, text, spk):
+def play_only_synthesis(args, device, model, vocoder, denoiser, text, spk, language):
     play = True
     text = text[0].strip()
-    text_processed = process_text(0, text, device, True)
+    text_processed = process_text(0, text, device, language, True)
 
     output = model.synthesise(
         text_processed["x"],
@@ -424,7 +370,7 @@ def play_only_synthesis(args, device, model, vocoder, denoiser, text, spk):
             spk = int(input("Enter speaker number:"))
             spk = torch.tensor([spk], device=device, dtype=torch.long)
             text = text.strip()
-            text_processed = process_text(0, text, device, True)
+            text_processed = process_text(0, text, device, language, True)
 
             output = model.synthesise(
                 text_processed["x"],
@@ -440,7 +386,7 @@ def play_only_synthesis(args, device, model, vocoder, denoiser, text, spk):
 
 
 
-def unbatched_synthesis(args, device, model, vocoder, denoiser, texts, spk):
+def unbatched_synthesis(args, device, model, vocoder, denoiser, texts, spk, language):
     total_rtf = []
     total_rtf_w = []
     for i, text in enumerate(texts):
@@ -449,7 +395,7 @@ def unbatched_synthesis(args, device, model, vocoder, denoiser, texts, spk):
 
         print("".join(["="] * 100))
         text = text.strip()
-        text_processed = process_text(i, text, device, None)
+        text_processed = process_text(i, text, device, language, None)
 
         print(f"[🍵] Whisking Matcha-T(ea)TS for: {i}")
         start_t = dt.datetime.now()
@@ -481,7 +427,7 @@ def unbatched_synthesis(args, device, model, vocoder, denoiser, texts, spk):
 
 def print_config(args):
     print("[!] Configurations: ")
-    print(f"\t- Model: {args.model}")
+    print(f"\t- Model: {args.checkpoint_path}")
     print(f"\t- Vocoder: {args.vocoder}")
     print(f"\t- Temperature: {args.temperature}")
     print(f"\t- Speaking rate: {args.speaking_rate}")
