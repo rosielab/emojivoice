@@ -67,7 +67,7 @@ PROMPT = """
 LLM_TEMPERATURE = 0.6
 
 ############################ TTS PARAMETERS ############################################################################
-TTS_MODEL_PATH = "./Matcha-TTS/matcha_vctk.ckpt"
+TTS_MODEL_PATH = "./Matcha-TTS/models/emoji-hri-paige-inference.ckpt"
 SPEAKING_RATE = 0.8
 STEPS = 10
 LANGUAGE = "en"
@@ -188,7 +188,7 @@ def to_waveform(mel, vocoder, denoiser=None):
 
 def play_only_synthesis(device, model, vocoder, denoiser, text, spk):
     text = text.strip()
-    text_processed = process_text(0, text, device, LANGUAGE)
+    text_processed = process_text(text, device, LANGUAGE)
 
     output = model.synthesise(
         text_processed["x"],
@@ -301,16 +301,11 @@ if __name__ == "__main__":
                 if emoji.is_emoji(char):
                     emoji_list.append(char)
             # incase the last emoji is not in the emoji list
-            if VOICE == 'base':
-                spk = torch.tensor([1], device=tts_device, dtype=torch.long)
-            if VOICE == 'default':
-                spk = torch.tensor([7], device=tts_device, dtype=torch.long)
-            if VOICE == 'emoji':
-                spk = torch.tensor([7], device=tts_device, dtype=torch.long)
-                for emote in emoji_list:
-                    if emote in emoji_mapping:
-                        spk = torch.tensor([emoji_mapping[emote]], device=tts_device, dtype=torch.long)
-                        break
+            spk = torch.tensor([0], device=tts_device, dtype=torch.long)
+            for emote in emoji_list:
+                if emote in emoji_mapping:
+                    spk = torch.tensor([emoji_mapping[emote]], device=tts_device, dtype=torch.long)
+                    break
             response = emoji.replace_emoji(response, '')
             #matcha cannot handle brackets
             response = response.replace(')', '')

@@ -116,11 +116,11 @@ if __name__ == "__main__":
             """
     LLM_TEMPERATURE = 0.6
     if VOICE == 'base' :
-        TTS_MODEL_PATH = "../Matcha-TTS/matcha_vctk.ckpt"
+        TTS_MODEL_PATH = "../../Matcha-TTS/models/matcha_vctk.ckpt"
         SPEAKING_RATE = 0.8
         STEPS = 10
     else:
-        TTS_MODEL_PATH = "../../Matcha-TTS/emoji-hri-paige.ckpt"
+        TTS_MODEL_PATH = "../../Matcha-TTS/models/emoji-hri-paige.ckpt"
         SPEAKING_RATE = 0.8
         STEPS = 10
     VOCODER_NAME= "hifigan_univ_v1"

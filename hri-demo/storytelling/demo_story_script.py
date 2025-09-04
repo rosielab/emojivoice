@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import soundfile as sf
 import torch
+import sys
 
 
 from matcha.hifigan.config import v1
@@ -20,13 +21,15 @@ SCRIPT_PATH = "fairytale_script.txt"
 WAV_PATH = "outputs"
 ############################ TTS PARAMETERS ############################################################################
 if VOICE == 'base' :
-    TTS_MODEL_PATH = "../../Matcha-TTS/matcha_vctk.ckpt"
+    TTS_MODEL_PATH = "../../Matcha-TTS/models/matcha_vctk.ckpt"
     SPEAKING_RATE = 0.8
     STEPS = 10
+    LANGUAGE = "en"
 else:
-    TTS_MODEL_PATH = "../../Matcha-TTS/emoji-hri-paige-inference.ckpt"
+    TTS_MODEL_PATH = "../../Matcha-TTS/models/emoji-hri-paige-inference.ckpt"
     SPEAKING_RATE = 0.8
     STEPS = 10
+    LANGUAGE = "en"
 # hifigan_univ_v1 is suggested, unless the custom model is trained on LJ Speech
 VOCODER_NAME= "hifigan_univ_v1"
 TTS_TEMPERATURE = 0.667
@@ -49,6 +52,7 @@ emoji_mapping = {
     '😅' : 22,
     '🤔' : 17
 }
+
 #male voice mapping
 #emoji_mapping = {
 #    '😍' : 4,
@@ -66,9 +70,20 @@ emoji_mapping = {
 
 ########################################################################################################################
 
-def process_text(i: int, text: str, device: torch.device, play):
+def process_text(text: str, device: torch.device, language: str):
+    cleaners = {
+        "en": "english_cleaners2",
+        "fr": "french_cleaners",
+        "ja": "japanese_cleaners",
+        "es": "spanish_cleaners",
+        "de": "german_cleaners",
+    }
+    if language not in cleaners:
+        print("Invalid language. Current supported languages: en (English), fr (French), ja (Japanese), de (German).")
+        sys.exit(1)
+
     x = torch.tensor(
-        intersperse(text_to_sequence(text, ["english_cleaners2"])[0], 0),
+        intersperse(text_to_sequence(text, [cleaners[language]])[0], 0),
         dtype=torch.long,
         device=device,
     )[None]
@@ -115,9 +130,9 @@ def save_to_folder(filename: str, output: dict, folder: str):
     folder.mkdir(exist_ok=True, parents=True)
     sf.write(folder / f"to_play-{filename}.wav", output["waveform"], 22050, "PCM_24")
 
-def play_only_synthesis(i, device, model, vocoder, denoiser, text, spk):
+def play_only_synthesis(device, model, vocoder, denoiser, text, spk, language):
     text = text.strip()
-    text_processed = process_text(0, text, device, True)
+    text_processed = process_text(text, device, language)
 
     output = model.synthesise(
         text_processed["x"],
@@ -175,6 +190,4 @@ if __name__ == "__main__":
             #matcha cannot handle brackets
             clean_line = clean_line.replace(')', '')
             clean_line = clean_line.replace('(', '')
-            play_only_synthesis(i, tts_device, tts_model, vocoder, denoiser, clean_line, spk)
-
-
+            play_only_synthesis(tts_device, tts_model, vocoder, denoiser, clean_line, spk, LANGUAGE)

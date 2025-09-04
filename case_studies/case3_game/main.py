@@ -78,11 +78,11 @@ LLM_TEMPERATURE = 0.6
 
 ############################ TTS PARAMETERS ############################################################################
 if VOICE == 'base' :
-    TTS_MODEL_PATH = "../../Matcha-TTS/matcha_vctk.ckpt"
+    TTS_MODEL_PATH = "../../Matcha-TTS/models/matcha_vctk.ckpt"
     SPEAKING_RATE = 0.8
     STEPS = 10
 else:
-    TTS_MODEL_PATH = "../../Matcha-TTS/emoji-hri-zach.ckpt"
+    TTS_MODEL_PATH = "../../Matcha-TTS/models/emoji-hri-zach.ckpt"
     SPEAKING_RATE = 0.8
     STEPS = 10
 # hifigan_univ_v1 is suggested, unless the custom model is trained on LJ Speech

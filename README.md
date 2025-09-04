@@ -50,7 +50,7 @@ We currently have 3 available emoji checkpoints:
 * Zach - Male
 
 Current checkpoints and data can be found [here](https://drive.google.com/drive/folders/1E_YTAaQxQfFdZYAKs547bgd4epkUbz_5?usp=sharing)
-We have left an empty folder (`Matcha-TTS/models`) where we suggest storing them and where they must be stored to 
+We have left an empty folder (`Matcha-TTS/models`) where we suggest storing them and where they must be stored to
 directly run our case-studies
 
 Too see per model (WhisperLive and Matcha-TTS) information and make edits within the pipeline see internal READMEs in
