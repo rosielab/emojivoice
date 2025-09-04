@@ -19,12 +19,16 @@ Read the paper [here](https://arxiv.org/abs/2506.15085)
 
 See our demo page [here](https://rosielab.github.io/emojivoice/)
 
-## Coming soon
-Multilingual baseline checkpoints to finetune your EmojiVoice
-
+## v1.0.0 updates
+Emojivoice is now supports multilingual for
 * French
 * German
-* Japanese - with phonemizer update for all Japnese alphabets
+* Japanese - with an updated phonemizer
+
+## Coming soon
+Your updates! Please reach out and make PRs for any issues or needed updates
+
+Also contact if you are interested in different languages
 
 ## Structure
 
